@@ -6,6 +6,14 @@
 
 class Server;
 
+// namespace helper
+// {
+// 	bool	strisdigit(const std::string &str)
+// 	{
+//
+// 	}
+// }
+
 class Cli
 {
 	private:

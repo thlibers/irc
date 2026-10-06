@@ -49,6 +49,8 @@ void	Cli::run(void)
 	else if (this->_argc > 3)
 			throw (Cli::Cli_error("Too enought arguments!"));
 
+	// Server launch goes here,
+	// this->_server = new Server(port, password)
 	std::cout << "NORMAL USE" << std::endl;
 }
 /*
