@@ -1,0 +1,6 @@
+
+.clangd
+ircserv
+.objects
+*.o
+.cache
