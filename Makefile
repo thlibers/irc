@@ -1,8 +1,7 @@
 NAME		=	ircserv
 
 COMPILER	=	c++
-FLAGS		=	-Wall -Wextra -Werror -std=c++98 -I. -c $(GCC_FLAGS)
-GCC_FLAGS	=	-Wno-alloc-size
+FLAGS		=	-Wall -Wextra -Werror -std=c++98 -I. -c
 
 ifdef DEBUG
 FLAGS		+= -DDEBUG -g3

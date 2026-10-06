@@ -53,10 +53,16 @@ void	Cli::run(void)
 	std::string password;
 	uint16_t	port;
 
+	if (DEBUG != false)
+	{
+		std::cerr << FR_BLUE
+				  << "[?] The debug mode is activated"
+				  << RESET << std::endl;
+	}
 	if (this->_argc < 3)
 		throw (Cli::Cli_error(ENOE_ARGS));
 	else if (this->_argc > 3)
-			throw (Cli::Cli_error(ETOM_ARGS));
+		throw (Cli::Cli_error(ETOM_ARGS));
 
 	port = helper::checkPort(this->_argv[1]);
 	password = helper::checkPassword(this->_argv[2]);

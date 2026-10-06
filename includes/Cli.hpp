@@ -5,6 +5,10 @@
 #include <string>
 #include <inttypes.h>
 
+#ifndef DEBUG
+# define DEBUG false
+#endif
+
 class Server;
 
 class Cli
