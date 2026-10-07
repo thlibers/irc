@@ -4,6 +4,14 @@
 #include <cstring>
 #include <vector>
 
+/*
+ * @brief: Function that allocated and copy a string in a second one without
+ *     using malloc like the real function (use new instead)
+ * @return:
+ *     - The copy of the string to copy
+ * @throw:
+ *     - std::bad_alloc if a memory allocation failed
+ */
 char	*strdup(char *tocpy)
 {
 	char		*str = NULL;
@@ -61,9 +69,33 @@ void						Message::parse(void)
 	tok = std::strtok(this->_raw_message, " ");
 	while (tok != NULL)
 	{
-
-		tok = std::strtok(this->_raw_message, " ");
+		// The first token is always a command
+		if (this->_command.empty())
+			this->_command = tok;
+		// The text messages always start with a ":"
+		else if (!this->_command.empty() && tok[0] == ':')
+		{
+			// Every token after a ":" will be considered as a text messages
+			while(tok != NULL)
+			{
+				// Temporary solution, manually add only one space between each token
+				if (!this->_text_message.empty())
+					this->_text_message += " ";
+				if (this->_text_message.empty() && tok[0] == ':')
+					this->_text_message += &tok[1];
+				else
+					this->_text_message += tok;
+				tok = std::strtok(NULL, " ");
+			}
+		}
+		else
+			// After a command, everything is a parameter until the end of the string of
+			// we find a token that start with a ":"
+			this->_parameter.push_back(tok);
+		// Get the next token
+		tok = std::strtok(NULL, " ");
 	}
+	// this->helper::strtrim(this->_text_message)
 }
 
 std::string					Message::getCommand(void) const throw() { return (this->_command); }

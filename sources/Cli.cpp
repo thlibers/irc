@@ -1,4 +1,5 @@
 #include "includes/Cli.hpp"
+#include "includes/Message.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -51,6 +52,19 @@ void	Cli::run(void)
 
 	// Server launch goes here,
 	// this->_server = new Server(port, password)
+	try
+	{
+		char	*raw = (char *)"PRIVMSG #channel : Hello world\r\n";
+		Message	msg(raw);
+		msg.parse();
+		std::cout << "Command: " << msg.getCommand() << std::endl
+				  << "First parameter: " <<  msg.getParameter()[0] << std::endl
+				  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
+	}
+	catch (std::exception &ex)
+	{
+		std::cerr << ex.what() << std::endl;
+	}
 	std::cout << "NORMAL USE" << std::endl;
 }
 /*
