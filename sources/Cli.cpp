@@ -54,12 +54,15 @@ void	Cli::run(void)
 	// this->_server = new Server(port, password)
 	try
 	{
-		char	*raw = (char *)"PRIVMSG #channel : Hello world\r\n";
+		char	*raw = (char *)"PRIVMSG #channel: Hello world\r\n";
 		Message	msg(raw);
 		msg.parse();
-		std::cout << "Command: " << msg.getCommand() << std::endl
-				  << "First parameter: " <<  msg.getParameter()[0] << std::endl
-				  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
+		if (DEBUG)
+		{
+			std::cout << "Command: " << msg.getCommand() << std::endl
+					  << "First parameter: " <<  msg.getParameter()[0] << std::endl
+					  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
+		}
 	}
 	catch (std::exception &ex)
 	{

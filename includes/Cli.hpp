@@ -4,15 +4,11 @@
 #include <stdexcept>
 #include <string>
 
-class Server;
+#ifndef DEBUG
+# define DEBUG false
+#endif
 
-// namespace helper
-// {
-// 	bool	strisdigit(const std::string &str)
-// 	{
-//
-// 	}
-// }
+class Server;
 
 class Cli
 {

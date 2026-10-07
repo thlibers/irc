@@ -61,6 +61,8 @@ Message::Message(char *raw_str) : _command(""), _parameter(), _text_message(""),
  *         - The "real" content of the message
  * @throw:
  *     - std::runtime_error with his corresponding error message
+ * @error:
+ *     - With "PRIVMSG #channel1: Hello world" the ":" is keeped on the parameter
  */
 void						Message::parse(void)
 {
