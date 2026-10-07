@@ -72,10 +72,15 @@ void	Cli::run(void)
 			  << RESET << std::endl;
 
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
-	// this->_server = new Server(port, password)
-	// if (this->_server == NULL)
-		// throw (std::runtime_error(EMEMORY));
-	// this->_server.run()
+	// try
+	// {
+	// 	this->_server = new Server(port, password)
+	// 	this->_server.run()
+	// }
+	// catch (std::bad_alloc &ex)
+	// {
+	// 	std::cerr << FR_RED << "[!] Failed to allocated memory for the server!" << std::endl;
+	// }
 }
 /*
  * @brief: The function that display the help message

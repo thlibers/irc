@@ -7,6 +7,8 @@
 #include <string>
 #include <inttypes.h>
 
+// #define cstrisempty(str) ((str && str[0] != '\0') ? true : false)
+
 /*
  * ==============
  * = STRISDIGIT =
@@ -118,8 +120,8 @@ std::string helper::checkPassword(std::string &_str)
  */
 
 /*
- * @brief: Function will trim whitespace on a string and return the
- *         timmed string.
+ * @brief: Function will trim every whitespace on a string and return the
+ *     timmed string.
  * @return:
  *     - The string without whitespace at the begining and the end
  */
