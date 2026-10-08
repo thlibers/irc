@@ -11,9 +11,14 @@ Channel::Channel() :
 	_modes()
 { std::memset(&this->_modes, 0, sizeof(this->_modes)); }
 
+Channel::Channel(std::string name, User &user) : _name(name)
+{
+	
+}
+
 Channel::~Channel(){}
 
-Channel::Channel(Channel &cpy) : 
+Channel::Channel(const Channel &cpy) : 
 	_name(cpy._name),
 	_topic(cpy._topic),
 	_members(cpy._members),
@@ -22,7 +27,7 @@ Channel::Channel(Channel &cpy) :
 	_modes(cpy._modes){
 }
 
-Channel &Channel::operator=(Channel &cpy){
+Channel &Channel::operator=(const Channel &cpy){
 	if (this != &cpy)
 	{
 		this->_name = cpy._name;
@@ -68,16 +73,61 @@ t_modes Channel::getMode() const
 
 // Functions
 
-bool Channel::isMember(std::string member) const
+bool Channel::isMember(std::string mem) const
 {
 	std::vector <std::string>::const_iterator it = this->_members.begin();
 	std::vector <std::string>::const_iterator ite = this->_members.end();
 
 	while (it != ite)
 	{
-		if (member == *it)
+		if (mem == *it)
 			return (true);
 		++it;
 	}
 	return (false);
 }
+
+bool Channel::isOperator(std::string ope) const
+{
+	std::vector <std::string>::const_iterator it = this->_operators.begin();
+	std::vector <std::string>::const_iterator ite = this->_operators.end();
+
+	while (it != ite)
+	{
+		if (ope == *it)
+			return (true);
+		++it;
+	}
+	return (false);
+}
+
+bool Channel::isGuest(std::string guest) const
+{
+	std::vector <std::string>::const_iterator it = this->_guests.begin();
+	std::vector <std::string>::const_iterator ite = this->_guests.end();
+
+	while (it != ite)
+	{
+		if (guest == *it)
+			return (true);
+		++it;
+	}
+	return (false);
+}
+
+void Channel::addMember(std::string mem)
+{
+	this->_members.push_back(mem);
+}
+
+void Channel::addOperator(std::string ope)
+{
+	this->_operators.push_back(ope);
+}
+
+void Channel::addGuest(std::string guest)
+{
+	this->_guests.push_back(guest);
+}
+
+//	^ Modifs a faire quand la class user sera add.
