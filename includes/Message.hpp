@@ -28,4 +28,5 @@ class Message
 		std::string					getTextMessage(void) const throw();
 		char						*getRawMessage(void) const throw();
 
+		void						debug(void) const throw();
 };
