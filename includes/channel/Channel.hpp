@@ -48,10 +48,10 @@ public :
 	void rmOperator(const std::string &ope);
 	void rmGuest(const std::string &guest);
 
-	void setTopic(const std::string &);
-	void setInviteOnly(bool);
-	void setTopicLocked(bool);
-	void setKey(const std::string &);
+	void setTopic(const std::string &topic);
+	void setInviteOnly(bool invonly);
+	void setTopicLocked(bool lock);
+	void setKey(const std::string &key);
 	void setLimit(size_t);
 
 	size_t membersNb() const;
