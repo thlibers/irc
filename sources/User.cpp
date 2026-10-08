@@ -3,30 +3,38 @@
 #include <cstddef>
 #include <vector>
 
-User::User(void) : _name("Anonymous"), _real_name("Unknown") { ; }
-User::User(std::string name, std::string real_name) : _name(name), _real_name(real_name) { ; }
+User::User(void) : _nickname("Anonymous"), _username("Anonymous"), _real_name("Unknown"), _password("") { ; }
+User::User(std::string nickname, std::string username, std::string real_name, std::string password) : _nickname(nickname), _username(username), _real_name(real_name), _password(password) { ; }
 User::~User(void) {;}
 
 User &User::operator=(User &cpy)
 {
 	if (this != &cpy)
 	{
-		this->_name = cpy._name;
+		this->_nickname = cpy._nickname;
+		this->_username = cpy._username;
 		this->_real_name = cpy._real_name;
+		this->_password = cpy._password;
+		this->_channel_list = cpy._channel_list;
 	}
 	return (*this);
 }
-
+/*
+ * @brief: Change the nickname of the user
+ */
+void	User::setNickname(std::string &nickname) throw() { this->_nickname = nickname; }
 /*
  * @brief: Change the username of the user
  */
-void	User::setName(std::string &name) throw()
-{ this->_name = name; }
+void	User::setUsername(std::string &username) throw() { this->_username = username; }
 /*
  * @brief: Change the real name of the user
  */
-void	User::setRealName(std::string &real_name) throw()
-{ this->_real_name = real_name; }
+void	User::setRealName(std::string &realname) throw() { this->_real_name = realname; }
+/*
+ * @brief: Change the password of the user
+ */
+void	User::setPassword(std::string &password) throw() { this->_password = password; }
 /*
  * @brief: Check if a user is on a channel
  * @param:
