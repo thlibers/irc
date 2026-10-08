@@ -10,7 +10,7 @@ typedef struct s_modes {
 	bool			inviteOnly;
 	bool			topicLocked;
 	std::string		key;
-	int8_t			limit;
+	size_t			limit;
 }	t_modes;
 
 class Channel
