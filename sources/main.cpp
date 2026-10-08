@@ -1,5 +1,6 @@
 
 #include "includes/Cli.hpp"
+#include "includes/helper.hpp"
 #include <exception>
 #include <iostream>
 
@@ -13,13 +14,13 @@ int main(int argc, char **argv)
 	}
 	catch (Cli::Cli_error &ex)
 	{
-		std::cerr << "Error caught : " << ex.what() << std::endl;
+		std::cerr << FR_RED << "[!] Error : " << ex.what() << RESET << std::endl;
 		cli.help();
 		return (1);
 	}
 	catch (std::exception &ex)
 	{
-		std::cerr << "Error caught : " << ex.what() << std::endl;
+		std::cerr << FR_RED << "[!] Error : " << ex.what() << RESET << std::endl;
 		return (1);
 	}
 	return (0);
