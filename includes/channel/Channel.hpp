@@ -4,14 +4,15 @@
 #include <vector>
 #include <inttypes.h>
 
-class User;
-
 typedef struct s_modes {
-	bool			inviteOnly;
-	bool			topicLocked;
-	std::string		key;
-	size_t			limit;
+	bool			inviteOnly;		//	Set/rm Invite-only channel
+	bool			topicLocked;	//	Set/rm the restrictions of the TOPIC command to channel ope
+	bool			opeprivilege;	//	Give/take channel operator privilege
+	std::string		key;			//	Set/remove the channel key (password)
+	size_t			limit;			//	Set/remove the user limit to channel
 }	t_modes;
+
+class User;
 
 class Channel
 {
