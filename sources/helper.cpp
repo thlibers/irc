@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 #include <inttypes.h>
+#include <cstring>
+
 
 // #define cstrisempty(str) ((str && str[0] != '\0') ? true : false)
 
@@ -174,4 +176,39 @@ std::string	helper::strtrim(std::string &str) throw()
 	if (first != 0)
 		cpy_str.erase(0, first);
 	return (cpy_str);
+}
+
+/*
+ * ==========
+ * = STRDUP =
+ * ==========
+ */
+
+/*
+ * @brief: Function that allocated and copy a string in a second one without
+ *     using malloc like the real function (use new instead)
+ * @return:
+ *     - The copy of the string to copy
+ * @throw:
+ *     - std::bad_alloc if a memory allocation failed
+ */
+char	*helper::strdup(char *tocpy)
+{
+	char		*str = NULL;
+	std::size_t	sz;
+
+	if (std::strlen(tocpy) == 0)
+	{
+		sz = 0;
+		str = new char[sz + 1];
+		str[sz] = '\0';
+	}
+	else
+	{
+		sz = std::strlen(tocpy);
+		str = new char[sz + 1];
+		std::memcpy(str, tocpy, sz + 1);
+	}
+
+	return (str);
 }
