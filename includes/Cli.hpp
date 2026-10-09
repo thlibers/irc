@@ -3,16 +3,13 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <inttypes.h>
+
+#ifndef DEBUG
+# define DEBUG false
+#endif
 
 class Server;
-
-// namespace helper
-// {
-// 	bool	strisdigit(const std::string &str)
-// 	{
-//
-// 	}
-// }
 
 class Cli
 {
@@ -40,5 +37,5 @@ class Cli
 		};
 
 		void	run();
-		void	help();
+		void	help() throw();
 };
