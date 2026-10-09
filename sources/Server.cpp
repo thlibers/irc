@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <cerrno>
 
-Server::Server(int port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
+Server::Server(const int16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
 
 // le but ici est de liberer chaque client -> fermer son fd, et delete sa "fiche" client
 // pour se balader dans la map client on a besoin d un iterateur, end pointe sur l element apres le dernier (comme '\0' sur une string)
@@ -109,7 +109,7 @@ void Server::SetupSocket()
 	if (bind(_listenfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 		throw std::runtime_error("bind() failed");
 
-	// listen()  bascule le socket en mode passif : 
+	// listen()  bascule le socket en mode passif :
 	// le noyau prend en charge les poignees de main TCP seul et empile les connexions etablies.
 	if (listen(_listenfd, SOMAXCONN) == -1)
 		throw std::runtime_error("listen() failed");
@@ -122,4 +122,3 @@ void Server::SetupSocket()
 	pfd.revents = 0;
 	_pollfds.push_back(pfd);
 }
-

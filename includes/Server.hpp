@@ -10,13 +10,14 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <cstring>
+#include <inttypes.h> // uint16_t lib
 
 class Client;
 
 class Server
 {
 	private:
-		int 						_port;				//port sur lequel ecouter
+		const uint16_t 				_port;				//port sur lequel ecouter (uint16_t == short == 65535, le nombre de port possible)
 		std::string					_psswd;				//mot de passe
 		int							_listenfd;			//socket(du serveur) qui attend les ecoutes
 		bool						_running;			//status, permet de sortir de la boucle au bon moment
@@ -24,7 +25,7 @@ class Server
 		std::map<int, Client*>		_clients;			// retrouver un client via son fd (chaque client a un fd et un objet de la classe client)
 
 	public:
-		Server(int port, const std::string &password);
+		Server(const int16_t port, const std::string &password);
 		~Server();
 
 		void Stop();
