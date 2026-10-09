@@ -25,7 +25,7 @@ class Server
 		std::map<int, Client*>		_clients;			// retrouver un client via son fd (chaque client a un fd et un objet de la classe client)
 
 	public:
-		Server(const int16_t port, const std::string &password);
+		Server(const uint16_t port, const std::string &password);
 		~Server();
 
 		void Stop();

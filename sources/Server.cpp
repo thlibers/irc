@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <cerrno>
 
-Server::Server(const int16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
+Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
 
 // le but ici est de liberer chaque client -> fermer son fd, et delete sa "fiche" client
 // pour se balader dans la map client on a besoin d un iterateur, end pointe sur l element apres le dernier (comme '\0' sur une string)
