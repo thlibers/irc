@@ -27,6 +27,7 @@ Message::Message(char *raw_str) : _command(""), _parameter(), _text_message(""),
 	if (this->_raw_message)
 		delete []this->_raw_message;
 	this->_raw_message = helper::strdup(raw_str);
+	this->parse();
 };
 /*
  * @brief: Helper function to parse comma-separated parameters
