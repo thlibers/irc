@@ -6,6 +6,10 @@
 #include <vector>
 #include <map>
 #include <poll.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <cstring>
 
 class Client;
 
