@@ -1,37 +1,11 @@
 
 #include "includes/Message.hpp"
+#include "includes/helper.hpp"
 #include <cstddef>
 #include <cstring>
 #include <vector>
-
-/*
- * @brief: Function that allocated and copy a string in a second one without
- *     using malloc like the real function (use new instead)
- * @return:
- *     - The copy of the string to copy
- * @throw:
- *     - std::bad_alloc if a memory allocation failed
- */
-char	*strdup(char *tocpy)
-{
-	char		*str = NULL;
-	std::size_t	sz;
-
-	if (strlen(tocpy) == 0)
-	{
-		sz = 0;
-		str = new char[sz + 1];
-		str[sz] = '\0';
-	}
-	else
-	{
-		sz = std::strlen(tocpy);
-		str = new char[sz + 1];
-		std::memcpy(str, tocpy, sz + 1);
-	}
-
-	return (str);
-}
+#include <sstream>
+#include <exception>
 
 Message::Message(void) : _command(""), _parameter(), _text_message("") { ; }
 Message::Message(Message &cpy) : _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
@@ -43,7 +17,7 @@ Message	&Message::operator=(Message &cpy)
 		this->_parameter = cpy._parameter;
 		this->_text_message = cpy._text_message;
 		if (this->_raw_message != NULL)
-			// delete
+			delete[] this->_raw_message;
 		this->_raw_message = cpy._raw_message;
 	}
 	return (*this);
@@ -52,8 +26,26 @@ Message::Message(char *raw_str) : _command(""), _parameter(), _text_message(""),
 {
 	if (this->_raw_message)
 		delete []this->_raw_message;
-	this->_raw_message = strdup(raw_str);
+	this->_raw_message = helper::strdup(raw_str);
 };
+/*
+ * @brief: Helper function to parse comma-separated parameters
+ * @param: token - The token potentially containing comma-separated values
+ * @note:
+ *     - Splits "param1,param2,param3" into separate parameters
+ *     - Example: "JOIN #ch1,#ch2,#ch3" creates three parameters
+ */
+void Message::_parseCommaSeparatedParams(const std::string& token)
+{
+	std::stringstream	ss(token);
+	std::string			param;
+
+	while (std::getline(ss, param, ','))
+	{
+		if (!param.empty())
+			this->_parameter.push_back(param);
+	}
+}
 /*
  * @brief: This function is used to parse an IRC line to extract information like
  *         - The command
@@ -61,44 +53,42 @@ Message::Message(char *raw_str) : _command(""), _parameter(), _text_message(""),
  *         - The "real" content of the message
  * @throw:
  *     - std::runtime_error with his corresponding error message
- * @error:
- *     - With "PRIVMSG #channel1: Hello world" the ":" is keeped on the parameter
+ * @note:
+ *     - Parameters can be comma-separated (e.g., "#ch1,#ch2")
+ *     - Trailing text (after ":") is kept as-is
+ *     - Example: "PRIVMSG #channel1,#channel2 :Hello world"
  */
-void						Message::parse(void)
+void Message::parse(void)
 {
-	char	*tok = NULL;
+	std::istringstream	stream(this->_raw_message);
+	std::string			token;
 
-	tok = std::strtok(this->_raw_message, " ");
-	while (tok != NULL)
+	if (!(stream >> token))
+		throw std::runtime_error("Empty message");
+	this->_command = token;
+
+	while (stream >> token)
 	{
-		// The first token is always a command
-		if (this->_command.empty())
-			this->_command = tok;
-		// The text messages always start with a ":"
-		else if (!this->_command.empty() && tok[0] == ':')
+		if (token[0] == ':')
 		{
-			// Every token after a ":" will be considered as a text messages
-			while(tok != NULL)
-			{
-				// Temporary solution, manually add only one space between each token
-				if (!this->_text_message.empty())
-					this->_text_message += " ";
-				if (this->_text_message.empty() && tok[0] == ':')
-					this->_text_message += &tok[1];
-				else
-					this->_text_message += tok;
-				tok = std::strtok(NULL, " ");
-			}
+			// Remove ':'
+			this->_text_message = token.substr(1);
+
+			std::string remainder;
+			std::getline(stream, remainder);
+			if (!remainder.empty())
+				this->_text_message += remainder;
+			break;
 		}
 		else
-			// After a command, everything is a parameter until the end of the string of
-			// we find a token that start with a ":"
-			this->_parameter.push_back(tok);
-		// Get the next token
-		tok = std::strtok(NULL, " ");
+		{
+			this->_parseCommaSeparatedParams(token);
+		}
 	}
-	// this->helper::strtrim(this->_text_message)
+	this->_text_message = helper::strtrim(this->_text_message);
 }
+
+
 
 std::string					Message::getCommand(void) const throw() { return (this->_command); }
 std::vector<std::string>	Message::getParameter(void) const throw() { return (this->_parameter); }

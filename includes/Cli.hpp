@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <inttypes.h>
 
 #ifndef DEBUG
 # define DEBUG false
@@ -36,5 +37,5 @@ class Cli
 		};
 
 		void	run();
-		void	help();
+		void	help() throw();
 };

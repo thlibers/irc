@@ -15,6 +15,7 @@ class Message
 		std::string 				_text_message;
 		// The message string without any treatement
 		char						*_raw_message;
+		void _parseCommaSeparatedParams(const std::string& token);
 
 	public:
 		Message(void);
