@@ -8,6 +8,7 @@
 class User;
 class Channel;
 class Message;
+class Server;
 
 class Dispatcher
 {
@@ -25,5 +26,5 @@ class Dispatcher
 		uint16_t	commandMode(User &user, Channel &channel, Message &message);
 
 	public:
-		static uint16_t executeCommand(User &user, Channel &channel, Message &message);
+		static uint16_t executeCommand(User &user, Channel &channel, Message &message, Server &server);
 };
