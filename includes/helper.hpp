@@ -40,4 +40,10 @@ namespace helper
 
 	std::string	strtrim(char *c_str) throw();
 	std::string	strtrim(std::string &str) throw();
+	std::string	strtrim(std::string &str, std::string set) throw();
+
+	bool		isSet(std::string character, std::string set);
+	bool		isSet(char character, std::string set);
+	bool		validChannelName(std::string &channel);
+
 }

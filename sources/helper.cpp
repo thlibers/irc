@@ -7,8 +7,6 @@
 #include <string>
 #include <inttypes.h>
 
-// #define cstrisempty(str) ((str && str[0] != '\0') ? true : false)
-
 /*
  * ==============
  * = STRISDIGIT =
@@ -72,7 +70,6 @@ uint16_t	helper::checkPort(const char *cstr_port)
 		throw (std::runtime_error(EINVALID_PORT));
 	return (helper::strtoany<uint16_t>(str_port));
 }
-
 uint16_t	helper::checkPort(const std::string &str)
 {
 	if (!helper::strisdigit(str)
@@ -104,7 +101,6 @@ std::string helper::checkPassword(char *_str)
 		std::runtime_error(EPWD_TOO_LONG);
 	return (password);
 }
-
 std::string helper::checkPassword(std::string &_str)
 {
 	if (_str.length() > 1024)
@@ -174,4 +170,71 @@ std::string	helper::strtrim(std::string &str) throw()
 	if (first != 0)
 		cpy_str.erase(0, first);
 	return (cpy_str);
+}
+
+std::string	helper::strtrim(std::string &str, std::string set) throw()
+{
+	std::string	cpy_str = str;
+	std::size_t first = 0;
+	std::size_t last;
+	std::size_t	size;
+
+	if (cpy_str.empty())
+		return ("");
+
+	size = cpy_str.size();
+	last = size;
+
+	cpy_str.find_last_of(set);
+	while (first < last && helper::isSet(static_cast<uint8_t>(cpy_str[first]), set))
+		++first;
+	while (last > first && helper::isSet(static_cast<uint8_t>(cpy_str[last - 1]), set))
+		--last;
+
+	if (last != size)
+		cpy_str.erase(last, size);
+	if (first != 0)
+		cpy_str.erase(0, first);
+	return (cpy_str);
+}
+/*
+ * @brief: This function check if a character is part of a set
+ * @return: True if the character is part of the set or False if is not
+ */
+bool	helper::isSet(std::string character, std::string set) { return (character.find_first_of(set) != std::string::npos); }
+bool	helper::isSet(char character, std::string set)
+{
+	for (std::string::const_iterator i = set.begin() ; i != set.end() ; ++i)
+	{
+		if (*i == character)
+			return (true);
+	}
+	return (false);
+}
+
+static std::string	getLowercase(void)
+{
+	std::string s;
+	char c = 'a';
+
+	while (c <= 'z')
+	{ s += c; }
+	return (s);
+}
+static std::string	getUppercase(void)
+{
+	std::string s;
+	char c = 'A';
+
+	while (c <= 'Z')
+	{ s += c; }
+	return (s);
+}
+/*
+ * @brief: This function if a string is valid channel name
+ * @return: True if the character is part of the set or False if is not
+ */
+bool	helper::validChannelName(std::string &channel)
+{
+	return (channel.find_first_not_of(getLowercase() + getUppercase() + "#!&+") != std::string::npos);
 }

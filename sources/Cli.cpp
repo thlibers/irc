@@ -74,19 +74,10 @@ void	Cli::run(void)
 			  << RESET << std::endl;
 
 	// TEST MESSAGE PARSING
-
-	try
-	{
-		char	*raw = (char *)"PRIVMSG #channel :Hello world\r\n";
-		Message	msg(raw);
-		msg.parse();
-		msg.debug();
-		// Dispatcher::executeCommand(User &user, Channel &channel, Message &message)
-	}
-	catch (std::exception &ex)
-	{
-		std::cerr << ex.what() << std::endl;
-	}
+	if (password.size() == 1)
+		std::cout << "isset: " << helper::isSet(password, "= -");
+	else
+		std::cout << "trimset: " << helper::strtrim(password, "= -");
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try
 	// {

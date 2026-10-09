@@ -4,9 +4,13 @@
 #include <string>
 #include <vector>
 
+class User;
+
 class Message
 {
 	private:
+		// The user who send the message
+		const User					*_user;
 		// The command wanted by the user
 		std::string 				_command;
 		// The parameter that will succed the command
@@ -18,11 +22,12 @@ class Message
 
 	public:
 		Message(void);
-		Message(char *raw_str);
+		Message(User *user, char *raw_str);
 		Message(Message &cpy);
 		Message	&operator=(Message &cpy);
 
 		void						parse(void);
+		User						*getUser(void) const throw();
 		std::string					getCommand(void) const throw();
 		std::vector<std::string>	getParameter(void) const throw();
 		std::string					getTextMessage(void) const throw();

@@ -35,12 +35,13 @@ char	*strdup(char *tocpy)
 	return (str);
 }
 
-Message::Message(void) : _command(""), _parameter(), _text_message("") { ; }
-Message::Message(Message &cpy) : _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
+Message::Message(void) : _user(NULL), _command(""), _parameter(), _text_message("") { ; }
+Message::Message(Message &cpy) : _user(cpy._user), _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
 Message	&Message::operator=(Message &cpy)
 {
 	if (this != &cpy)
 	{
+		this->_user = cpy._user;
 		this->_command = cpy._command;
 		this->_parameter = cpy._parameter;
 		this->_text_message = cpy._text_message;
@@ -50,7 +51,7 @@ Message	&Message::operator=(Message &cpy)
 	}
 	return (*this);
 }
-Message::Message(char *raw_str) : _command(""), _parameter(), _text_message(""), _raw_message(NULL)
+Message::Message(User *user, char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(NULL)
 {
 	if (this->_raw_message)
 		delete []this->_raw_message;
