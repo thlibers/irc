@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "includes/Server.hpp"
 #include <unistd.h>
 
 Server::Server(int port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
@@ -15,7 +15,8 @@ Server::~Server()
 		++it)
 	{
 		close(it->first);
-		delete it->second;
+		// TODO: decommenter quand la classe Client existe (delete sur type incomplet = erreur avec -Werror)
+		// delete it->second;
 	}
 	_clients.clear();
 	if(_listenfd != -1)
