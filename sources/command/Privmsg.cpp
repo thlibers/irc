@@ -1,10 +1,10 @@
 
 #include "includes/command/Privmsg.hpp"
-#include "includes/Dispatcher.hpp"
+#include "includes/command/Dispatcher.hpp"
 #include "includes/command/Commande.hpp"
 #include "includes/Message.hpp"
 #include "includes/User.hpp"
-#include "includes/helper.hpp"
+#include "includes/namespace/helper.hpp"
 #include <stdexcept>
 #include <vector>
 

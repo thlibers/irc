@@ -11,6 +11,16 @@
 
 class Server;
 
+/*
+ * @brief: Parse arguments from argv and launch the server
+ * @detail: This class is the spine of our server. She is in charge of take
+ *     information from our argv and check if the information provided is valid,
+ *     non valid information can be such as short overflow, password too long or
+ *     port who contain non digit character. The Server * is allocated dynamicly
+ *     when we are sure that the provided information is valid and then the server
+ *     is launch
+ *
+ */
 class Cli
 {
 	private:

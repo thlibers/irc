@@ -1,6 +1,6 @@
 
 #include "includes/Message.hpp"
-#include "includes/helper.hpp"
+#include "includes/namespace/helper.hpp"
 #include <cstddef>
 #include <cstring>
 #include <vector>

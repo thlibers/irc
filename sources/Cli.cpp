@@ -1,9 +1,9 @@
 
 #include "includes/Cli.hpp"
-#include "includes/Dispatcher.hpp"
+#include "includes/command/Dispatcher.hpp"
 #include "includes/Message.hpp"
 #include "includes/Error.hpp"
-#include "includes/helper.hpp"
+#include "includes/namespace/helper.hpp"
 
 #include <inttypes.h>
 #include <iostream>

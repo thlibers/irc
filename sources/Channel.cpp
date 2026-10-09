@@ -1,8 +1,8 @@
-#include <Channel.hpp>
+#include <includes/Channel.hpp>
 #include <cstring>
 #include <iterator>
 
-Channel::Channel() : 
+Channel::Channel() :
 	_name(""),
 	_topic(""),
 	_members(),
@@ -13,12 +13,12 @@ Channel::Channel() :
 
 Channel::Channel(std::string name, User &user) : _name(name)
 {
-	
+
 }
 
 Channel::~Channel(){}
 
-Channel::Channel(const Channel &cpy) : 
+Channel::Channel(const Channel &cpy) :
 	_name(cpy._name),
 	_topic(cpy._topic),
 	_members(cpy._members),

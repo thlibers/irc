@@ -6,6 +6,13 @@
 
 class User;
 
+/*
+ * @brief: This class it the representation of the message sent but the user
+ * @detail: This class will parse an IRC message to extract information such as
+ *     the command, every parameter and the plain text parameter. I have put a User * to
+ *     know easly who sent the message. The raw_message is probably useless but i put it in case
+ *     of we need to do the non-parsed string.
+ */
 class Message
 {
 	private:

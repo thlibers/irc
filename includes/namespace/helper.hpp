@@ -12,6 +12,17 @@
 #define FR_BLUE "\e[34m"
 #define RESET "\e[0m"
 
+/*
+ * ======================================
+ * = CHANNEL CHARACTER VERIFICATION SET =
+ * ======================================
+ */
+#define CHANNEL_NAME_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#!&+")
+#define UPPER_CASE_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+#define LOWER_CASE_SET static_cast<std::string>("abcdefghijklmnopqrstuvwxyz")
+#define DIGIT_SET static_cast<std::string>("0123456789")
+#define SPECIAL_SET static_cast<std::string>("#!&+")
+
 namespace helper
 {
 	bool	strisdigit(char *str) throw();

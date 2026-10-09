@@ -21,7 +21,7 @@ private :
 	std::vector	<std::string>	_members;
 	std::vector	<std::string>	_operators;
 	std::vector	<std::string>	_guests;
-	t_modes						_modes;	
+	t_modes						_modes;
 
 public :
 	Channel();
