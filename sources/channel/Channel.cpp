@@ -1,24 +1,56 @@
-#include <Channel.hpp>
-#include <cstring>
-#include <iterator>
+#include "includes/channel/Channel.hpp"
+#include <algorithm>
 
-Channel::Channel() : 
+//	Helpers
+
+static bool contains(const std::vector <std::string> &list, const std::string &nick)
+{
+	return (std::find(list.begin(), list.end(), nick) != list.end());
+}
+
+static void removeNick(std::vector <std::string> &list, const std::string &nick)
+{
+	std::vector <std::string>::iterator it = std::find(list.begin(), list.end(), nick);
+
+	if (it != list.end())
+		list.erase(it);
+}
+
+static void renameNick(std::vector <std::string> &list, const std::string &oldNick, const std::string &newNick)
+{
+	std::replace(list.begin(), list.end(), oldNick, newNick);
+}
+
+//	Constructors
+
+Channel::Channel() :
 	_name(""),
 	_topic(""),
 	_members(),
 	_operators(),
 	_guests(),
 	_modes()
-{ std::memset(&this->_modes, 0, sizeof(this->_modes)); }
+{}
 
-Channel::Channel(std::string name, User &user) : _name(name)
+//	Le createur d'un channel en est automatiquement operateur
+/* J'ai remplacé Channel(std::string, User &)
+par Channel(const std::string &name, const std::string &creator).
+User n'existe pas sur cette branche (std::vector<User *> une fois User mergé)*/
+Channel::Channel(const std::string &name, const std::string &creator) :
+	_name(name),
+	_topic(""),
+	_members(),
+	_operators(),
+	_guests(),
+	_modes()
 {
-	
+	this->addMember(creator);
+	this->addOperator(creator);
 }
 
 Channel::~Channel(){}
 
-Channel::Channel(const Channel &cpy) : 
+Channel::Channel(const Channel &cpy) :
 	_name(cpy._name),
 	_topic(cpy._topic),
 	_members(cpy._members),
@@ -37,6 +69,7 @@ Channel &Channel::operator=(const Channel &cpy){
 		this->_guests = cpy._guests;
 		this->_modes = cpy._modes;
 	}
+	return (*this);
 }
 
 //	Geters
@@ -71,63 +104,110 @@ t_modes Channel::getMode() const
 	return(this->_modes);
 }
 
-// Functions
+//	Checks
 
-bool Channel::isMember(std::string mem) const
+bool Channel::isMember(const std::string &mem) const
 {
-	std::vector <std::string>::const_iterator it = this->_members.begin();
-	std::vector <std::string>::const_iterator ite = this->_members.end();
-
-	while (it != ite)
-	{
-		if (mem == *it)
-			return (true);
-		++it;
-	}
-	return (false);
+	return (contains(this->_members, mem));
 }
 
-bool Channel::isOperator(std::string ope) const
+bool Channel::isOperator(const std::string &ope) const
 {
-	std::vector <std::string>::const_iterator it = this->_operators.begin();
-	std::vector <std::string>::const_iterator ite = this->_operators.end();
-
-	while (it != ite)
-	{
-		if (ope == *it)
-			return (true);
-		++it;
-	}
-	return (false);
+	return (contains(this->_operators, ope));
 }
 
-bool Channel::isGuest(std::string guest) const
+bool Channel::isGuest(const std::string &guest) const
 {
-	std::vector <std::string>::const_iterator it = this->_guests.begin();
-	std::vector <std::string>::const_iterator ite = this->_guests.end();
-
-	while (it != ite)
-	{
-		if (guest == *it)
-			return (true);
-		++it;
-	}
-	return (false);
+	return (contains(this->_guests, guest));
 }
 
-void Channel::addMember(std::string mem)
+//	Add
+
+//	Rejoindre le channel consomme l'invitation
+void Channel::addMember(const std::string &mem)
 {
+	if (this->isMember(mem))
+		return ;
 	this->_members.push_back(mem);
+	this->rmGuest(mem);
 }
 
-void Channel::addOperator(std::string ope)
+//	Ne fait rien si ope n'est pas membre : MODE +o doit verifier avant pour renvoyer l'erreur 441
+void Channel::addOperator(const std::string &ope)
 {
+	if (!this->isMember(ope) || this->isOperator(ope))
+		return ;
 	this->_operators.push_back(ope);
 }
 
-void Channel::addGuest(std::string guest)
+void Channel::addGuest(const std::string &guest)
 {
-	this->_guests.push_back(guest);
+	if (!this->isGuest(guest))
+		this->_guests.push_back(guest);
 }
 
-//	^ Modifs a faire quand la class user sera add.
+//	Remove
+
+//	Quitter le channel (PART, KICK, QUIT) fait aussi perdre le statut d'operateur
+void Channel::rmMember(const std::string &mem)
+{
+	removeNick(this->_members, mem);
+	removeNick(this->_operators, mem);
+}
+
+void Channel::rmOperator(const std::string &ope)
+{
+	removeNick(this->_operators, ope);
+}
+
+void Channel::rmGuest(const std::string &guest)
+{
+	removeNick(this->_guests, guest);
+}
+
+//	A appeler par NICK sur chaque channel du user, sinon il perd sa place et ses droits
+void Channel::renameMember(const std::string &oldNick, const std::string &newNick)
+{
+	renameNick(this->_members, oldNick, newNick);
+	renameNick(this->_operators, oldNick, newNick);
+	renameNick(this->_guests, oldNick, newNick);
+}
+
+//	Seters
+
+void Channel::setTopic(const std::string &topic)
+{
+	this->_topic = topic;
+}
+
+void Channel::setInviteOnly(bool invonly)
+{
+	this->_modes.inviteOnly = invonly;
+}
+
+void Channel::setTopicLocked(bool lock)
+{
+	this->_modes.topicLocked = lock;
+}
+
+void Channel::setKey(const std::string &key)
+{
+	this->_modes.key = key;
+}
+
+void Channel::setLimit(size_t limit)
+{
+	this->_modes.limit = limit;
+}
+
+//	Utils
+
+size_t Channel::membersNb() const
+{
+	return (this->_members.size());
+}
+
+bool Channel::isChannelEmpty() const
+{
+	return (this->_members.empty());
+}

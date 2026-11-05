@@ -7,11 +7,11 @@
 typedef struct s_modes {
 	bool			inviteOnly;		//	Set/rm Invite-only channel
 	bool			topicLocked;	//	Set/rm the restrictions of the TOPIC command to channel ope
-	std::string		key;			//	Set/remove the channel key (password)
-	size_t			limit;			//	Set/remove the user limit to channel
-}	t_modes;
+	std::string		key;			//	Set/remove the channel key (password), vide = pas de key
+	size_t			limit;			//	Set/remove the user limit to channel, 0 = pas de limite
 
-class User;
+	s_modes() : inviteOnly(false), topicLocked(false), key(), limit(0) {}
+}	t_modes;
 
 class Channel
 {
@@ -19,13 +19,13 @@ private :
 	std::string					_name;
 	std::string					_topic;
 	std::vector	<std::string>	_members;
-	std::vector	<std::string>	_operators;
-	std::vector	<std::string>	_guests;
-	t_modes						_modes;	
+	std::vector	<std::string>	_operators;		//	Toujours un sous-ensemble de _members
+	std::vector	<std::string>	_guests;		//	Invites par INVITE, retires quand ils rejoignent
+	t_modes						_modes;
 
 public :
 	Channel();
-	Channel(std::string name, User &user);
+	Channel(const std::string &name, const std::string &creator);
 	~Channel();
 	Channel(const Channel &cpy);
 	Channel &operator=(const Channel &cpy);
@@ -47,12 +47,13 @@ public :
 	void rmMember(const std::string &mem);
 	void rmOperator(const std::string &ope);
 	void rmGuest(const std::string &guest);
+	void renameMember(const std::string &oldNick, const std::string &newNick);
 
 	void setTopic(const std::string &topic);
 	void setInviteOnly(bool invonly);
 	void setTopicLocked(bool lock);
 	void setKey(const std::string &key);
-	void setLimit(size_t);
+	void setLimit(size_t limit);
 
 	size_t membersNb() const;
 	bool isChannelEmpty() const;
