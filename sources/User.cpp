@@ -9,8 +9,18 @@
  * = USER CONSTRUCTOR/DESTRUCTOR =
  * ===============================
  */
-User::User(void) : _nickname("Anonymous"), _username("Anonymous"), _real_name("Unknown"), _password("") { ; }
-User::User(std::string nickname, std::string username, std::string real_name, std::string password) : _nickname(nickname), _username(username), _real_name(real_name), _password(password) { ; }
+User::User(void) :
+	_nickname("Anonymous"),
+	_username("Anonymous"),
+	_real_name("Unknown"),
+	_password("")
+{ ; }
+User::User(std::string nickname, std::string username, std::string real_name, std::string password) :
+	_nickname(nickname),
+	_username(username),
+	_real_name(real_name),
+	_password(password)
+{ ; }
 User::~User(void) {;}
 
 User &User::operator=(User &cpy)
@@ -34,6 +44,7 @@ User &User::operator=(User &cpy)
 
 /*
  * @brief: Change the nickname of the user
+ * @param:
  */
 void	User::setNickname(std::string &nickname) throw() { this->_nickname = nickname; }
 /*
