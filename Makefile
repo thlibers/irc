@@ -11,7 +11,7 @@ endif
 
 OBJECT_DIR	=	.objects
 
-SOURCES		=	$(wildcard *.cpp */*.cpp)
+SOURCES		=	$(shell find . -name "*.cpp" 2>/dev/null)
 OBJECTS		=	$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(SOURCES))
 
 all: $(NAME)
@@ -35,4 +35,4 @@ fclean: clean
 
 re: fclean $(NAME)
 
-.PHONY: all re fclean clean
+.PHONY: all re fclean clean $(NAME)
