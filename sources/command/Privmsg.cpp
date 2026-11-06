@@ -38,7 +38,7 @@ void	Privmsg::run(void)
 		throw (std::runtime_error("Missing channel to send a message"));
 	if (!helper::validChannelName(this->_channel))
 		throw (std::runtime_error("Invalid channel name"));
-	if ((channel = this->_user->getChannelByName(this->_channel)) == NULL);
+	if ((channel = this->_user->getChannelByName(this->_channel)) == NULL)
 		throw (std::runtime_error("Channel not found"));
 
 	// SOCKET THINGS GOES HERE

@@ -9,5 +9,5 @@ Pass::Pass(User &user, Message &message) : Command(user, message)
 Pass::Pass(Pass &cpy) : Command(cpy), _new_password(cpy._new_password) { ; }
 Pass::~Pass(void) { ; }
 
-void	run(void)
+void	Pass::run(void)
 { ; }

@@ -14,6 +14,7 @@ uint16_t Dispatcher::executeCommand(std::vector<User *> vec_user, std::vector<Ch
 	(void)vec_channel;
 	(void)message;
 	std::string wanted_command = message.getCommand();
+	/* UGLY ASF */
 	if (wanted_command == "PRIVMSG")
 		return (ERR_UNKNOWNCOMMAND); // FOR NoW
 	else if (wanted_command == "JOIN")

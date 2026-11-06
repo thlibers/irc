@@ -21,15 +21,4 @@ class Nick : public Command
 		~Nick(void);
 
 		void	run(void);
-
-		// class FailedExec : public std::runtime_error
-		// {
-		// 	private:
-		// 		std::string _message;
-		// 	public:
-		// 		FailedExec(void);
-		// 		FailedExec(std::string messasge);
-		// 		virtual ~FailedExec(void);
-		// 		virtual const char	*what(void) const throw();
-		// };
 };

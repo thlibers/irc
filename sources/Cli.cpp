@@ -1,5 +1,6 @@
 
 #include "includes/Cli.hpp"
+#include "includes/Channel.hpp"
 #include "includes/command/Dispatcher.hpp"
 #include "includes/Message.hpp"
 #include "includes/Error.hpp"
@@ -11,6 +12,7 @@
 #include <exception>
 #include <new>
 #include <stdexcept>
+#include <vector>
 
 /*
  * =============
@@ -40,6 +42,13 @@ Cli::~Cli(void)
 	// if (this->_server != NULL)
 		// delete _server;
 	;
+}
+
+static void	test_dispatcher(void)
+{
+	std::vector<User *>		usr;
+	std::vector<Channel *>	ch;
+
 }
 /*
  * @brief: Parse arguments from argv and run the server
@@ -73,11 +82,6 @@ void	Cli::run(void)
 							 ", connect to it with the password \"" << helper::strtrim(password) << "\""
 			  << RESET << std::endl;
 
-	// TEST MESSAGE PARSING
-	if (password.size() == 1)
-		std::cout << "isset: " << helper::isSet(password, "= -");
-	else
-		std::cout << "trimset: " << helper::strtrim(password, "= -");
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try
 	// {

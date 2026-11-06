@@ -1,10 +1,6 @@
-<<<<<<< HEAD:sources/Channel.cpp
 #include <includes/Channel.hpp>
 #include <cstring>
 #include <iterator>
-
-=======
-#include "includes/channel/Channel.hpp"
 #include <algorithm>
 
 //	Helpers
@@ -29,7 +25,6 @@ static void renameNick(std::vector <std::string> &list, const std::string &oldNi
 
 //	Constructors
 
->>>>>>> feature/channel:sources/channel/Channel.cpp
 Channel::Channel() :
 	_name(""),
 	_topic(""),
@@ -51,12 +46,8 @@ Channel::Channel(const std::string &name, const std::string &creator) :
 	_guests(),
 	_modes()
 {
-<<<<<<< HEAD:sources/Channel.cpp
-
-=======
 	this->addMember(creator);
 	this->addOperator(creator);
->>>>>>> feature/channel:sources/channel/Channel.cpp
 }
 
 Channel::~Channel(){}
@@ -157,9 +148,6 @@ void Channel::addGuest(const std::string &guest)
 		this->_guests.push_back(guest);
 }
 
-<<<<<<< HEAD:sources/Channel.cpp
-//	^ Modifs a faire quand la class user sera add.
-=======
 //	Remove
 
 //	Quitter le channel (PART, KICK, QUIT) fait aussi perdre le statut d'operateur
@@ -225,4 +213,3 @@ bool Channel::isChannelEmpty() const
 {
 	return (this->_members.empty());
 }
->>>>>>> feature/channel:sources/channel/Channel.cpp
