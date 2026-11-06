@@ -8,7 +8,7 @@ class Channel;
 class User
 {
 	private:
-		// The nickname of the user
+		// The nickname of the user (unique)
 		std::string				_nickname;
 		// The username of the user
 		std::string				_username;
@@ -22,6 +22,7 @@ class User
 		// CONSTRUCTOR
 		User(void);
 		User(std::string nickname, std::string username, std::string real_name, std::string password);
+		User(User &cpy);
 		User &operator=(User &cpy);
 		~User(void);
 
@@ -41,6 +42,6 @@ class User
 		bool	isOnChannel(Channel &channel) const throw();
 		bool	isOnChannel(std::string &channel) const throw();
 		bool	addChannel(Channel &channel) throw();
-		bool	remChannel(Channel &channel) throw();
-		Channel *getChannelByName(std::string &channel_name) const throw();
+		bool	removeChannel(Channel &channel) throw();
+		const Channel *getChannelByName(std::string &channel_name) const throw();
 };

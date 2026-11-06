@@ -2,6 +2,7 @@
 #include "includes/User.hpp"
 #include "includes/Channel.hpp"
 #include <cstddef>
+#include <cstring>
 #include <vector>
 
 /*
@@ -21,7 +22,19 @@ User::User(std::string nickname, std::string username, std::string real_name, st
 	_real_name(real_name),
 	_password(password)
 { ; }
-User::~User(void) {;}
+User::User(User &cpy) :
+	_nickname(cpy._nickname),
+	_username(cpy._username),
+	_real_name(cpy._real_name),
+	_password(cpy._password)
+{ ; }
+User::~User(void)
+{
+	// Safely clean every password on memory
+	if (!this->_password.empty())
+		std::memset(&this->_password[0], 0, this->_password.length());
+	this->_password.clear();
+}
 
 User &User::operator=(User &cpy)
 {
@@ -43,39 +56,61 @@ User &User::operator=(User &cpy)
  */
 
 /*
+ * @name: setNickname
  * @brief: Change the nickname of the user
- * @param:
+ * @param: A std::string with the new nickname of the user
  */
-void	User::setNickname(std::string &nickname) throw() { this->_nickname = nickname; }
+void	User::setNickname(std::string &nickname) throw()
+{ this->_nickname = nickname; }
 /*
+	* @name: setUsername
  * @brief: Change the username of the user
+ * @param: A std::string with the new username of the user
  */
-void	User::setUsername(std::string &username) throw() { this->_username = username; }
+void	User::setUsername(std::string &username) throw()
+{ this->_username = username; }
 /*
+ * @name: setRealName
  * @brief: Change the real name of the user
+ * @param: A std::string with the new real name of the user
  */
-void	User::setRealName(std::string &realname) throw() { this->_real_name = realname; }
+void	User::setRealName(std::string &realname) throw()
+{ this->_real_name = realname; }
 /*
+ * @name: setPassword
  * @brief: Change the password of the user
+ * @param: A std::string with the new password of the user
  */
-void	User::setPassword(std::string &password) throw() { this->_password = password; }
+void	User::setPassword(std::string &password) throw()
+{ this->_password = password; }
 /*
+ * @name: getNickname
  * @brief: Get the nickname of the user
+ * @return: The nickname of the user
  */
-std::string	User::getNickname(void) throw() { return (this->_nickname); }
+std::string	User::getNickname(void) throw()
+{ return (this->_nickname); }
 /*
+ * @name: getUsername
  * @brief: Get the username of the user
+ * @return: The username of the user
  */
-std::string	User::getUsername(void) throw() { return (this->_username); }
+std::string	User::getUsername(void) throw()
+{ return (this->_username); }
 /*
+ * @name: getRealName
  * @brief: Get the real name of the user
+ * @return: The real name of the user
  */
-std::string	User::getRealName(void) throw() { return (this->_real_name); }
+std::string	User::getRealName(void) throw()
+{ return (this->_real_name); }
 /*
+ * @name: getPassword
  * @brief: Get the password of the user
+ * @return: The password of the user
  */
-std::string	User::getPassword(void) throw() { return (this->_password); }
-
+std::string	User::getPassword(void) throw()
+{ return (this->_password); }
 
 /*
  * ==========================
@@ -84,42 +119,49 @@ std::string	User::getPassword(void) throw() { return (this->_password); }
  */
 
 /*
+ * @name: isOnChannel
  * @brief: Check if a user is on a channel
- * @param:
- *     - channel, a reference to the channel class we want check or the name of the channel
- * @return:
- *     - True if the user is on the channel
- *     - False if the user is not on the channel
+ * @param: A reference to the channel class we want check if the user is on
+ * @param: A std::string with the name of the channel we want check if the user is on
+ * @return: true if the user is on the channel, false if the user is not on the channel
  */
 bool	User::isOnChannel(Channel &channel) const throw()
 {
 	std::vector<Channel*>::const_iterator it = _channel_list.begin();
+	std::vector<Channel*>::const_iterator ite = this->_channel_list.end();
 
-	for ( ; it != this->_channel_list.end() ; ++it)
+	while (it != ite)
 	{
 		if (*it == &channel)
-			return (true);
+		{
+			if ((*it)->isMember(this->_nickname))
+				return (true);
+		}
+		++it;
 	}
 	return (false);
 }
 bool	User::isOnChannel(std::string &channel) const throw()
 {
-	std::vector<Channel*>::const_iterator it = _channel_list.begin();
+	std::vector<Channel*>::const_iterator it = this->_channel_list.begin();
+	std::vector<Channel*>::const_iterator ite = this->_channel_list.end();
 
-	for ( ; it != this->_channel_list.end() ; ++it)
+	while (it != ite)
 	{
 		if ((*it)->getName() == channel)
-			return (true);
+		{
+			if ((*it)->isMember(this->_nickname))
+				return (true);
+		}
+		++it;
 	}
 	return (false);
 }
 /*
+ * @name: addChannel
  * @brief: Add a channel to the channel vector
- * @param:
- *     - channel, a reference to the channel class we want add
- * @return:
- *     - True if the user has been added to the channel
- *     - False if the user is already on the channel
+ * @param: A reference to the channel class we want add from our user channel list
+ * @return: true if the user has been added to the channel, false if the user is already on the channel
  */
 bool	User::addChannel(Channel &channel) throw()
 {
@@ -130,47 +172,42 @@ bool	User::addChannel(Channel &channel) throw()
 	return (true);
 }
 /*
- * @brief: Remove a channel to the channel vector, will be usefull when a user will
- *     leave a channel
- * @param:
- *     - channel, a reference to the channel class we want add
- * @return:
- *     - True if the user has been removed from the channel
- *     - False if the user is not on the channel
+ * @name: removeChannel
+ * @brief: Remove a channel to the channel vector, will be usefull when a user will leave a channel
+ * @param: A reference to the channel class we want remove for our user channel list
+ * @return: true if the user has been removed from the channel, false if the user is not on the channel
  */
-bool	User::remChannel(Channel &channel) throw()
+bool	User::removeChannel(Channel &channel) throw()
 {
-	std::vector<Channel*>::const_iterator	it = _channel_list.begin();
-	std::size_t								i = 0;
-	Channel									*ptr = NULL;
+	std::vector<Channel*>::iterator	it = _channel_list.begin();
+	std::vector<Channel*>::const_iterator ite = _channel_list.end();
 
 	if (!this->isOnChannel(channel))
-		return (false);
+		goto failed;
 
-	for ( ; it != this->_channel_list.end() ; ++it)
+	for ( ; it != ite ; ++it)
 	{
 		if (*it == &channel)
 		{
-			ptr = *it;
-			break;
+			this->_channel_list.erase(it);
+			return (true);
 		}
-		i++;
 	}
-	if (ptr != NULL)
-		this->_channel_list.erase(this->_channel_list.begin() + i);
-	return (true);
+	failed:
+		return (false);
 }
 
 /*
- * @brief: Get the pointer to channel from the user channel list by searching using the name
- *     of the channel
- * @param:
- *     - channel_name name of the channel we search
+ * @name: getChannelByName
+ * @brief: Get the pointer to a channel from the user channel list by using the name
+ *         of the channel
+ * @param: The name of the channel we are searching on the joined channel list
+ * @return: The pointer to the channel class we are searching, NULL if the user is not on the channel
  */
-Channel *User::getChannelByName(std::string &channel_name) const throw()
+const Channel *User::getChannelByName(std::string &channel_name) const throw()
 {
-	std::vector<Channel *>::const_iterator it_beg = this->_channel_list.begin();
-	std::vector<Channel *>::const_iterator it_end = this->_channel_list.end();
+	std::vector<Channel*>::const_iterator it_beg = this->_channel_list.begin();
+	std::vector<Channel*>::const_iterator it_end = this->_channel_list.end();
 
 	while (it_beg != it_end)
 	{
