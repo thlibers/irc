@@ -196,7 +196,6 @@ bool	User::removeChannel(Channel &channel) throw()
 	failed:
 		return (false);
 }
-
 /*
  * @name: getChannelByName
  * @brief: Get the pointer to a channel from the user channel list by using the name

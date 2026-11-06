@@ -1,6 +1,6 @@
 
 #pragma once
-#include "string"
+#include <string>
 #include <vector>
 
 class Channel;
@@ -8,7 +8,7 @@ class Channel;
 class User
 {
 	private:
-		// The nickname of the user (unique)
+		// The nickname of the user (should be unique)
 		std::string				_nickname;
 		// The username of the user
 		std::string				_username;
@@ -16,29 +16,34 @@ class User
 		std::string				_real_name;
 		// The password of the user
 		std::string				_password;
-		// The list of every channel that the user is on
+		// A vector with every channel that the user is on
 		std::vector<Channel *>	_channel_list;
+
 	public:
-		// CONSTRUCTOR
+		// --- CONSTRUCTOR / DESTRUCTOR ---
+
 		User(void);
 		User(std::string nickname, std::string username, std::string real_name, std::string password);
 		User(User &cpy);
 		User &operator=(User &cpy);
 		~User(void);
 
-		// USER RELATED SETTER
+		// --- SETTER ---
+
 		void	setNickname(std::string &nickname) throw();
 		void	setUsername(std::string &username) throw();
 		void	setRealName(std::string &realname) throw();
 		void	setPassword(std::string &password) throw();
 
-		// GET USER RELATED DATA
+		// --- GETTER ---
+
 		std::string	getNickname(void) throw();
 		std::string	getUsername(void) throw();
 		std::string	getRealName(void) throw();
 		std::string	getPassword(void) throw();
 
-		// USER CHANNEL RELATED DATA
+		// --- USER CHANNEL ---
+
 		bool	isOnChannel(Channel &channel) const throw();
 		bool	isOnChannel(std::string &channel) const throw();
 		bool	addChannel(Channel &channel) throw();
