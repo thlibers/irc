@@ -7,8 +7,18 @@
 #include <sstream>
 #include <exception>
 
-Message::Message(void) : _command(""), _parameter(), _text_message("") { ; }
-Message::Message(Message &cpy) : _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
+Message::Message(void) :
+	_command(""),
+	_parameter(),
+	_text_message(""),
+	_raw_message(NULL)
+{ ; }
+Message::Message(Message &cpy) :
+	_command(cpy._command),
+	_parameter(cpy._parameter),
+	_text_message(""),
+	_raw_message(NULL)
+{ ; };
 Message	&Message::operator=(Message &cpy)
 {
 	if (this != &cpy)
@@ -59,20 +69,28 @@ void Message::_parseCommaSeparatedParams(const std::string& token)
  *     - Trailing text (after ":") is kept as-is
  *     - Example: "PRIVMSG #channel1,#channel2 :Hello world"
  */
+void Message::parse(const char *raw_message)
+{
+	if (this->_raw_message)
+		delete []this->_raw_message;
+	this->_raw_message = helper::strdup(raw_message);
+	this->parse();
+}
 void Message::parse(void)
 {
 	std::istringstream	stream(this->_raw_message);
 	std::string			token;
 
 	if (!(stream >> token))
-		throw std::runtime_error("Empty message");
+		throw (std::runtime_error("Empty message"));
+	/* First token is always the command */
 	this->_command = token;
 
 	while (stream >> token)
 	{
+		/* If the token start a text message */
 		if (token[0] == ':')
 		{
-			// Remove ':'
 			this->_text_message = token.substr(1);
 
 			std::string remainder;
@@ -81,17 +99,24 @@ void Message::parse(void)
 				this->_text_message += remainder;
 			break;
 		}
+		/* Get every parameter */
 		else
 		{
 			this->_parseCommaSeparatedParams(token);
 		}
 	}
+	/* Remove every whitespace at the end of the text message (including the \r\n of the irc message)*/
 	this->_text_message = helper::strtrim(this->_text_message);
 }
 
+const std::string					Message::getCommand(void) const throw() { return (this->_command); }
+const std::vector<std::string>		Message::getParameter(void) const throw() { return (this->_parameter); }
+const std::string					Message::getTextMessage(void) const throw() { return (this->_text_message); }
+const char							*Message::getRawMessage(void) const throw() { return (this->_raw_message); }
 
-
-std::string					Message::getCommand(void) const throw() { return (this->_command); }
-std::vector<std::string>	Message::getParameter(void) const throw() { return (this->_parameter); }
-std::string					Message::getTextMessage(void) const throw() { return (this->_text_message); }
-char						*Message::getRawMessage(void) const throw() { return (this->_raw_message); }
+// Message::parameter_type				Message::whichParameterType(std::string &param)
+// {
+// 	if (param.empty())
+// 		return (Message::INVALID);
+// 	return (Message::USER_NAME);
+// }

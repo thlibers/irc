@@ -10,6 +10,7 @@
 #include <exception>
 #include <new>
 #include <stdexcept>
+#include <vector>
 
 /*
  * =============
@@ -39,6 +40,29 @@ Cli::~Cli(void)
 	// if (this->_server != NULL)
 		// delete _server;
 	;
+}
+static void test_message_class(void)
+{
+	try
+	{
+		char	*raw = (char *)"PRIVMSG #channel, user1,user2 :Hello world  message123456  \r\n";
+		Message	msg;
+		msg.parse(raw);
+		if (DEBUG)
+		{
+			std::cout << "Message recieved :\t\"" << helper::strtrim(raw) << "\"" << std::endl
+					  << "Command:\t\t\"" << msg.getCommand() << "\"" << std::endl
+		  			  << "First parameter:\t\"" <<  msg.getParameter()[0] << "\"" << std::endl
+					  << "Second parameter:\t\"" <<  msg.getParameter()[1] << "\"" << std::endl
+					  << "Third parameter:\t\"" <<  msg.getParameter()[2] << "\"" << std::endl
+					  << "Text message:\t\t\"" << msg.getTextMessage() << "\"" << std::endl
+					  << "Raw message:\t\t\"" << msg.getRawMessage() << "\"" << std::endl;
+		}
+	}
+	catch (std::exception &ex)
+	{
+		std::cerr << ex.what() << std::endl;
+	}
 }
 /*
  * @brief: Parse arguments from argv and run the server
@@ -71,25 +95,7 @@ void	Cli::run(void)
 	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
 							 ", connect to it with the password \"" << helper::strtrim(password) << "\""
 			  << RESET << std::endl;
-
-	try
-	{
-		char	*raw = (char *)"PRIVMSG #channel, user1,user2 : Hello world\r\n";
-		Message	msg(raw);
-		// msg.parse();
-		if (DEBUG)
-		{
-			std::cout << "Command: " << msg.getCommand() << std::endl
-		  			  << "First parameter: " <<  msg.getParameter()[0] << std::endl
-					  << "Second parameter: " <<  msg.getParameter()[1] << std::endl
-					  << "Third parameter: " <<  msg.getParameter()[2] << std::endl
-					  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
-		}
-	}
-	catch (std::exception &ex)
-	{
-		std::cerr << ex.what() << std::endl;
-	}
+	test_message_class();
 
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try

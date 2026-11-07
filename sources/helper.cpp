@@ -212,3 +212,23 @@ char	*helper::strdup(char *tocpy)
 
 	return (str);
 }
+char	*helper::strdup(const char *tocpy)
+{
+	char		*str = NULL;
+	std::size_t	sz;
+
+	if (std::strlen(tocpy) == 0)
+	{
+		sz = 0;
+		str = new char[sz + 1];
+		str[sz] = '\0';
+	}
+	else
+	{
+		sz = std::strlen(tocpy);
+		str = new char[sz + 1];
+		std::memcpy(str, tocpy, sz + 1);
+	}
+
+	return (str);
+}
