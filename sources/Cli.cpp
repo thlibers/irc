@@ -2,6 +2,8 @@
 #include "includes/Cli.hpp"
 #include "includes/Error.hpp"
 #include "includes/helper.hpp"
+#include "includes/User.hpp"
+#include "includes/Channel.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -9,6 +11,7 @@
 #include <exception>
 #include <new>
 #include <stdexcept>
+#include <vector>
 
 /*
  * =============
