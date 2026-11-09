@@ -4,6 +4,8 @@
 #include <vector>
 #include <cstddef>
 
+class User;
+
 typedef struct s_modes {
 	bool			inviteOnly;		//	Set/rm Invite-only channel
 	bool			topicLocked;	//	Set/rm the restrictions of the TOPIC command to channel ope
@@ -18,36 +20,37 @@ class Channel
 private :
 	std::string					_name;
 	std::string					_topic;
-	std::vector	<std::string>	_members;
-	std::vector	<std::string>	_operators;		//	Toujours un sous-ensemble de _members
-	std::vector	<std::string>	_guests;		//	Invites par INVITE, retires quand ils rejoignent
+	std::vector	<User *>		_members;
+	std::vector	<User *>		_operators;		//	Toujours un sous-ensemble de _members
+	std::vector	<User *>		_guests;		//	Invites par INVITE, retires quand ils rejoignent
 	t_modes						_modes;
 
 public :
 	Channel();
-	Channel(const std::string &name, const std::string &creator);
+	Channel(const std::string &name, User *creator);
 	~Channel();
 	Channel(const Channel &cpy);
 	Channel &operator=(const Channel &cpy);
 
-	std::string getName() const;
-	std::string getTopic() const;
-	std::vector <std::string> getMember() const;
-	std::vector <std::string> getOperator() const;
-	std::vector <std::string> getGuest() const;
-	t_modes getMode() const;
+	std::string 				getName() const;
+	std::string 				getTopic() const;
+	const std::vector <User *> 	&getMember() const;
+	const std::vector <User *> 	&getOperator() const;
+	const std::vector <User *> 	&getGuest() const;
+	t_modes 					getMode() const;
+	User 						*getMemberByNick(const std::string &nick) const;
 
-	bool isMember(const std::string &mem) const;
-	bool isOperator(const std::string &ope) const;
-	bool isGuest(const std::string &guest) const;
+	bool isMember(const std::string &nick) const;
+	bool isMember(const User *mem) const;
+	bool isOperator(const User *ope) const;
+	bool isGuest(const User *guest) const;
 
-	void addMember(const std::string &mem);
-	void addOperator(const std::string &ope);
-	void addGuest(const std::string &guest);
-	void rmMember(const std::string &mem);
-	void rmOperator(const std::string &ope);
-	void rmGuest(const std::string &guest);
-	void renameMember(const std::string &oldNick, const std::string &newNick);
+	void addMember(User *mem);
+	void addOperator(User *ope);
+	void addGuest(User *guest);
+	void rmMember(const User *mem);
+	void rmOperator(const User *ope);
+	void rmGuest(const User *guest);
 
 	void setTopic(const std::string &topic);
 	void setInviteOnly(bool invonly);
