@@ -1,4 +1,5 @@
 #include "includes/channel/Commands.hpp"
+#include "includes/User.hpp"
 #include <cctype>
 #include <sstream>
 
@@ -43,9 +44,9 @@ static bool isValidChannelName(const std::string &name)
 }
 
 //	Envoie line a tous les membres, sauf exclude si il est donne
-static void broadcast(t_replies &out, const Channel &chan, const std::string &line, const std::string &exclude = "")
+static void broadcast(t_replies &out, const Channel &chan, const std::string &line, const User *exclude = NULL)
 {
-	const std::vector <std::string> members = chan.getMember();
+	const std::vector <User *> &members = chan.getMember();
 
 	for (size_t i = 0; i < members.size(); ++i)
 	{
@@ -86,6 +87,12 @@ static void constructMode(std::string &applied, char &lastSign, char sign, char 
 	applied += mode;
 }
 
+//	Prefix IRC de l'expediteur : "nick!user@host"
+static std::string prefix(User &user)
+{
+	return (user.getNickname() + '!' + user.getUsername() + "@localhost");
+}
+
 //	Constructors
 
 ChannelCommands::ChannelCommands() : _channels() {}
@@ -120,8 +127,8 @@ void ChannelCommands::deleteIfEmpty(const std::string &name)
 }
 
 //	JOIN <channel>{,<channel>} [<key>{,<key>}]
-
-t_replies ChannelCommands::join(const t_sender &sender, const t_params &params)
+//	Decoupe la liste des chnnels et celle des clefs, puis apelle joinOne pour chaque channel.
+t_replies ChannelCommands::join(User &sender, const t_params &params)
 {
 	t_replies out;
 
@@ -137,35 +144,38 @@ t_replies ChannelCommands::join(const t_sender &sender, const t_params &params)
 	return (out);
 }
 
-void ChannelCommands::joinOne(const t_sender &sender, const std::string &name, const std::string &key, t_replies &out)
+//	joinOne et join sont separees car JOIN peut viser plusieurs channels
+//	(echec sur 1 ne doit pas impacter les autres)
+void ChannelCommands::joinOne(User &sender, const std::string &name, const std::string &key, t_replies &out)
 {
 	if (!isValidChannelName(name))
 		return ;	//	403 ERR_NOSUCHCHANNEL
 	Channel *chan = this->getChannel(name);
 	if (!chan)
 	{
-		chan = &this->_channels.insert(std::make_pair(toLower(name), Channel(name, sender.nick))).first->second;
+		chan = &this->_channels.insert(std::make_pair(toLower(name), Channel(name, &sender))).first->second;
 	}
 	else
 	{
 		const t_modes modes = chan->getMode();
-		if (chan->isMember(sender.nick))
+		if (chan->isMember(&sender))
 			return ;
 		if (!modes.key.empty() && modes.key != key)
 			return ;	//	475 ERR_BADCHANNELKEY
-		if (modes.inviteOnly && !chan->isGuest(sender.nick))
+		if (modes.inviteOnly && !chan->isGuest(&sender))
 			return ;	//	473 ERR_INVITEONLYCHAN
 		if (modes.limit != 0 && chan->membersNb() >= modes.limit)
 			return ;	//	471 ERR_CHANNELISFULL
-		chan->addMember(sender.nick);
+		chan->addMember(&sender);
 	}
-	broadcast(out, *chan, ":" + sender.prefix + " JOIN " + chan->getName() + "\r\n");
+	sender.addChannel(chan);
+	broadcast(out, *chan, ":" + prefix(sender) + " JOIN " + chan->getName() + "\r\n");
 	//	332 RPL_TOPIC si le channel a un topic, puis 353 RPL_NAMREPLY avec names() et 366 RPL_ENDOFNAMES
 }
 
 //	PART <channel>{,<channel>} [:<raison>]
 
-t_replies ChannelCommands::part(const t_sender &sender, const t_params &params)
+t_replies ChannelCommands::part(User &sender, const t_params &params)
 {
 	t_replies out;
 
@@ -178,20 +188,21 @@ t_replies ChannelCommands::part(const t_sender &sender, const t_params &params)
 	return (out);
 }
 
-void ChannelCommands::partOne(const t_sender &sender, const std::string &name, const std::string &reason, t_replies &out)
+void ChannelCommands::partOne(User &sender, const std::string &name, const std::string &reason, t_replies &out)
 {
 	Channel *chan = this->getChannel(name);
 
 	if (!chan)
 		return ;	//	403 ERR_NOSUCHCHANNEL
-	if (!chan->isMember(sender.nick))
+	if (!chan->isMember(&sender))
 		return ;	//	442 ERR_NOTONCHANNEL
-	std::string line = ":" + sender.prefix + " PART " + chan->getName();
+	std::string line = ":" + prefix(sender) + " PART " + chan->getName();
 	if (!reason.empty())
 		line += " :" + reason;
 	//	Broadcast avant le retrait, pour que celui qui part recoive aussi le message
 	broadcast(out, *chan, line + "\r\n");
-	chan->rmMember(sender.nick);
+	chan->rmMember(&sender);
+	sender.removeChannel(chan);
 	this->deleteIfEmpty(name);
 }
 
@@ -204,11 +215,11 @@ std::vector <std::string> ChannelCommands::names(const std::string &channel)
 
 	if (!chan)
 		return (lists);
-	const std::vector <std::string> members = chan->getMember();
+	const std::vector <User *> &members = chan->getMember();
 	std::string list;
 	for (size_t i = 0; i < members.size(); ++i)
 	{
-		std::string entry = (chan->isOperator(members[i]) ? "@" : "") + members[i];
+		std::string entry = (chan->isOperator(members[i]) ? "@" : "") + members[i]->getNickname();
 		if (!list.empty() && list.size() + entry.size() + 1 > 400)
 		{
 			lists.push_back(list);
@@ -223,7 +234,7 @@ std::vector <std::string> ChannelCommands::names(const std::string &channel)
 
 //	PRIVMSG <channel> :<texte>
 
-t_replies ChannelCommands::privmsg(const t_sender &sender, const std::string &target, const std::string &text)
+t_replies ChannelCommands::privmsg(User &sender, const std::string &target, const std::string &text)
 {
 	t_replies out;
 	const Channel *chan = this->getChannel(target);
@@ -232,15 +243,15 @@ t_replies ChannelCommands::privmsg(const t_sender &sender, const std::string &ta
 		return (out);	//	412 ERR_NOTEXTTOSEND
 	if (!chan)
 		return (out);	//	401 ERR_NOSUCHNICK
-	if (!chan->isMember(sender.nick))
+	if (!chan->isMember(&sender))
 		return (out);	//	404 ERR_CANNOTSENDTOCHAN
-	broadcast(out, *chan, ":" + sender.prefix + " PRIVMSG " + chan->getName() + " :" + text + "\r\n", sender.nick);
+	broadcast(out, *chan, ":" + prefix(sender) + " PRIVMSG " + chan->getName() + " :" + text + "\r\n", &sender);
 	return (out);
 }
 
 //	MODE <channel> [<modes> [<arguments>...]]
 
-t_replies ChannelCommands::mode(const t_sender &sender, const t_params &params)
+t_replies ChannelCommands::mode(User &sender, const t_params &params)
 {
 	t_replies out;
 
@@ -258,7 +269,7 @@ t_replies ChannelCommands::mode(const t_sender &sender, const t_params &params)
 	//	Certains clients demandent la liste des bans en rejoignant, sans etre operateurs
 	if (params[1] == "b" || params[1] == "+b")
 		return (out);	//	368 RPL_ENDOFBANLIST
-	if (!chan->isOperator(sender.nick))
+	if (!chan->isOperator(&sender))
 		return (out);	//	482 ERR_CHANOPRIVSNEEDED
 
 	const std::string &letters = params[1];
@@ -339,7 +350,8 @@ t_replies ChannelCommands::mode(const t_sender &sender, const t_params &params)
 		{
 			if (argIndex >= params.size())
 				continue ;	//	461 ERR_NEEDMOREPARAMS
-			const std::string &target = params[argIndex++];
+			const std::string &nick = params[argIndex++];
+			User *target = chan->getMemberByNick(nick);
 			if (!chan->isMember(target))
 				continue ;	//	441 ERR_USERNOTINCHANNEL
 			if (chan->isOperator(target) != adding)
@@ -349,12 +361,12 @@ t_replies ChannelCommands::mode(const t_sender &sender, const t_params &params)
 				else
 					chan->rmOperator(target);
 				constructMode(applied, lastSign, sign, letter);
-				appliedArgs += " " + target;
+				appliedArgs += " " + target->getNickname();
 			}
 		}
 		//	sinon : 472 ERR_UNKNOWNMODE
 	}
 	if (!applied.empty())
-		broadcast(out, *chan, ":" + sender.prefix + " MODE " + chan->getName() + " " + applied + appliedArgs + "\r\n");
+		broadcast(out, *chan, ":" + prefix(sender) + " MODE " + chan->getName() + " " + applied + appliedArgs + "\r\n");
 	return (out);
 }
