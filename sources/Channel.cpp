@@ -1,4 +1,4 @@
-#include "includes/channel/Channel.hpp"
+#include "includes/Channel.hpp"
 #include <algorithm>
 
 //	Helpers
