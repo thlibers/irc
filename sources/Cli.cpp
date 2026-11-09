@@ -5,6 +5,8 @@
 #include "includes/Message.hpp"
 #include "includes/Error.hpp"
 #include "includes/namespace/helper.hpp"
+#include "includes/Message.hpp"
+#include "includes/Error.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -81,6 +83,25 @@ void	Cli::run(void)
 	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
 							 ", connect to it with the password \"" << helper::strtrim(password) << "\""
 			  << RESET << std::endl;
+
+	try
+	{
+		char	*raw = (char *)"PRIVMSG #channel, user1,user2 : Hello world\r\n";
+		Message	msg(raw);
+		// msg.parse();
+		if (DEBUG)
+		{
+			std::cout << "Command: " << msg.getCommand() << std::endl
+		  			  << "First parameter: " <<  msg.getParameter()[0] << std::endl
+					  << "Second parameter: " <<  msg.getParameter()[1] << std::endl
+					  << "Third parameter: " <<  msg.getParameter()[2] << std::endl
+					  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
+		}
+	}
+	catch (std::exception &ex)
+	{
+		std::cerr << ex.what() << std::endl;
+	}
 
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try

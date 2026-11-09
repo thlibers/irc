@@ -57,4 +57,5 @@ namespace helper
 	bool		isSet(char character, std::string set);
 	bool		validChannelName(std::string &channel);
 
+	char		*strdup(char *tocpy);
 }
