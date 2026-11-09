@@ -3,6 +3,7 @@
 #include "includes/Channel.hpp"
 #include <cstddef>
 #include <cstring>
+#include <new>
 #include <vector>
 
 /*
@@ -246,4 +247,23 @@ const Channel *User::getChannelByName(std::string &channel_name) const throw()
 			return (*it);
 	}
 	return (NULL);
+}
+
+/*
+ * @brief: This function is wrapper to easly create a new User
+ * @param: nickname, the nickname of the user. This data should be unique throught the entier IRC server
+ * @param: username, the username associated of the user
+ * @param: real name, the real name of the user
+ * @param: password, the password associated of the user
+ * @return: Return the new created user or NULL if the user cannot be created
+ */
+User	*User::createNewUser(std::string &nickname,
+							std::string &username,
+							std::string &realname,
+							std::string &password)
+{
+	User *new_user;
+
+	new_user = new(std::nothrow) User(nickname, username, realname, password);
+	return (new_user);
 }

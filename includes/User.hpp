@@ -62,6 +62,11 @@ class User
 		bool	removeChannel(Channel &channel) throw();
 		bool	removeChannel(Channel *channel) throw();
 		const Channel *getChannelByName(std::string &channel_name) const throw();
+
+		static User	*createNewUser(std::string &nickname,
+								   std::string &username,
+								   std::string &realname,
+								   std::string &password);
 };
 
 typedef std::vector<User*>::iterator		user_it;
