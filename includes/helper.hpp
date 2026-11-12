@@ -40,4 +40,6 @@ namespace helper
 
 	std::string	strtrim(char *c_str) throw();
 	std::string	strtrim(std::string &str) throw();
+	char		*strdup(char *tocpy);
+	char		*strdup(const char *tocpy);
 }
