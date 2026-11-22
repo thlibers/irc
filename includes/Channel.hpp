@@ -59,3 +59,6 @@ public :
 	bool isChannelEmpty() const;
 
 };
+
+typedef std::vector<Channel*>::iterator			channel_it;
+typedef std::vector<Channel*>::const_iterator	channel_const_it;
