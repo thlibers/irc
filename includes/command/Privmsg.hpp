@@ -1,16 +1,16 @@
 
 #pragma once
 
-#include "includes/command/Commande.hpp"
+#include "includes/command/ACommande.hpp"
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 class User;
 class Message;
-class Command;
+class ACommand;
 
-class Privmsg : public Command
+class Privmsg : public ACommand
 {
 	private:
 		std::string					_channel;

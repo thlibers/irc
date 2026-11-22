@@ -1,15 +1,15 @@
 
 #include "includes/command/Privmsg.hpp"
-#include "includes/command/Dispatcher.hpp"
-#include "includes/command/Commande.hpp"
+#include "includes/Dispatcher.hpp"
+#include "includes/command/ACommande.hpp"
 #include "includes/Message.hpp"
 #include "includes/User.hpp"
 #include "includes/namespace/helper.hpp"
 #include <stdexcept>
 #include <vector>
 
-Privmsg::Privmsg(void) : Command(), _channel(""), _userlist() { ; }
-Privmsg::Privmsg(User &user, Message &message) : Command(user, message)
+Privmsg::Privmsg(void) : ACommand(), _channel(""), _userlist() { ; }
+Privmsg::Privmsg(User &user, Message &message) : ACommand(user, message)
 {
 	std::vector<std::string> parameter = this->_message->getParameter();
 	std::vector<std::string>::const_iterator it = parameter.begin();
@@ -27,7 +27,7 @@ Privmsg::Privmsg(User &user, Message &message) : Command(user, message)
 		++it;
 	}
 }
-Privmsg::Privmsg(Privmsg &cpy) : Command(cpy), _channel(cpy._channel), _userlist(cpy._userlist) { ; }
+Privmsg::Privmsg(Privmsg &cpy) : ACommand(cpy), _channel(cpy._channel), _userlist(cpy._userlist) { ; }
 Privmsg::~Privmsg(void) { ; }
 
 void	Privmsg::run(void)

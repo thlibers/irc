@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "includes/command/Commande.hpp"
+#include "includes/command/ACommande.hpp"
 #include <string>
 
 class User;
 class Message;
 
-class Pass : public Command
+class Pass : public ACommand
 {
 	private:
 		std::string _new_password;

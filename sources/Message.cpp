@@ -6,6 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <exception>
+#include <iostream>
 
 Message::Message(void) : _user(NULL), _command(""), _parameter(), _text_message("") { ; }
 Message::Message(Message &cpy) : _user(cpy._user), _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
@@ -23,6 +24,13 @@ Message	&Message::operator=(Message &cpy)
 	}
 	return (*this);
 }
+Message::Message(User *user, const char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(NULL)
+{
+	if (this->_raw_message)
+		delete []this->_raw_message;
+	this->_raw_message = helper::strdup(raw_str);
+	this->parse();
+};
 Message::Message(User *user, char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(NULL)
 {
 	if (this->_raw_message)
@@ -90,8 +98,6 @@ void Message::parse(void)
 	this->_text_message = helper::strtrim(this->_text_message);
 }
 
-
-
 std::string					Message::getCommand(void) const throw() { return (this->_command); }
 std::vector<std::string>	Message::getParameter(void) const throw() { return (this->_parameter); }
 std::string					Message::getTextMessage(void) const throw() { return (this->_text_message); }
@@ -100,10 +106,10 @@ char						*Message::getRawMessage(void) const throw() { return (this->_raw_messa
 void						Message::debug(void) const throw()
 {
 	std::vector<std::string>::const_iterator it = this->_parameter.begin();
-	std::vector<std::string>::const_iterator itend = this->_parameter.end();
+	std::vector<std::string>::const_iterator ite = this->_parameter.end();
 
 	std::cout << "Command: \"" << this->_command << "\"" << std::endl;
-	for (std::size_t i = 1; it != itend; i++)
+	for (std::size_t i = 1; it != ite; i++)
 	{
 		std::cout << "Parameter n°" << i << ": \"" << *it << "\"" << std::endl;
 		++it;

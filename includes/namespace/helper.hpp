@@ -58,4 +58,5 @@ namespace helper
 	bool		validChannelName(std::string &channel);
 
 	char		*strdup(char *tocpy);
+	char		*strdup(const char *tocpy);
 }

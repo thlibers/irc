@@ -30,6 +30,7 @@ class Message
 
 	public:
 		Message(void);
+		Message(User *user, const char *raw_str);
 		Message(User *user, char *raw_str);
 		Message(Message &cpy);
 		Message	&operator=(Message &cpy);

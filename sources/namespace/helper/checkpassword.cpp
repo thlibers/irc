@@ -15,11 +15,13 @@ std::string helper::checkPassword(char *_str)
 
 	if (password.length() > 1024)
 		std::runtime_error(EPWD_TOO_LONG);
+	helper::strtrim(password);
 	return (password);
 }
 std::string helper::checkPassword(std::string &_str)
 {
 	if (_str.length() > 1024)
 		std::runtime_error(EPWD_TOO_LONG);
+	helper::strtrim(_str);
 	return (_str);
 }
