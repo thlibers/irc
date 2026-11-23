@@ -30,5 +30,8 @@ class Server
 
 		void Stop();
 		void Run();
+		void Accept();
 		void SetupSocket();
+		bool Receive(int fd);
+		void Disconnect(size_t i);
 };

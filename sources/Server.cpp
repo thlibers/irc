@@ -60,8 +60,23 @@ void Server::Run()
 		}
 
 		// ici on sait que ready > 0 : au moins un fd a un evenement.
-		// C est ici que viendra le parcours de _pollfds (prochaine etape).
-		std::cout << ready << " fd(s) pret(s)" << std::endl;
+		for(size_t i = 0; i < _pollfds.size(); i++)
+		{
+			if(_pollfds[i].revents == 0)
+				continue;
+			if(_pollfds[i].fd == _listenfd)
+			{
+				if(_pollfds[i].revents & POLLIN)
+				{
+					Accept();
+				}
+			}
+			else if(Receive(_pollfds[i].fd) == false)
+			{
+				Disconnect(i);
+				i--;
+			}
+		}
 	}
 }
 
@@ -121,4 +136,43 @@ void Server::SetupSocket()
 	pfd.events = POLLIN;
 	pfd.revents = 0;
 	_pollfds.push_back(pfd);
+}
+
+void Server::Accept()
+{
+	int fd = accept(_listenfd, NULL, NULL);
+	if (fd == -1)
+		return;
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		close(fd);
+		return;
+	}
+	struct pollfd pfd;
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+	_pollfds.push_back(pfd);
+	_clients[fd] = NULL;
+	std::cout << "New Client FD : " << fd << std::endl;
+}
+
+bool Server::Receive(int fd)
+{
+	char buf[512];
+	ssize_t n = recv(fd, buf, sizeof(buf), 0);
+	if(n <= 0)
+		return false;
+	std::string data(buf, n);
+	std::cout << "Fd " << fd << ": " << data << std::endl;
+	return true;
+}
+
+void Server::Disconnect(size_t i)
+{
+	int fd = _pollfds[i].fd;
+	close(fd);
+	_clients.erase(fd);
+	_pollfds.erase(_pollfds.begin() + i);
+	std::cout << "Client : " << fd << " disconnected" << std::endl;
 }
