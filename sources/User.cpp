@@ -1,6 +1,6 @@
 
 #include "includes/User.hpp"
-#include "includes/Channel.hpp"
+#include "includes/channel/Channel.hpp"
 #include <cstddef>
 #include <cstring>
 #include <vector>

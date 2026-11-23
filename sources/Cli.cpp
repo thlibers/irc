@@ -3,7 +3,7 @@
 #include "includes/Error.hpp"
 #include "includes/helper.hpp"
 #include "includes/User.hpp"
-#include "includes/Channel.hpp"
+#include "includes/channel/Channel.hpp"
 
 #include <inttypes.h>
 #include <iostream>

@@ -11,7 +11,7 @@ endif
 
 OBJECT_DIR	=	.objects
 
-SOURCES		=	$(wildcard *.cpp */*.cpp)
+SOURCES		=	$(wildcard *.cpp */*.cpp */*/*.cpp)
 OBJECTS		=	$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(SOURCES))
 
 all: $(NAME)
