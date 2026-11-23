@@ -23,6 +23,8 @@ class Server
 		bool						_running;			//status, permet de sortir de la boucle au bon moment
 		std::vector<struct pollfd>	_pollfds;			// fd que la fonction poll() surveille
 		std::map<int, Client*>		_clients;			// retrouver un client via son fd (chaque client a un fd et un objet de la classe client)
+		std::map<int, std::string>	_recvbuf;
+		std::map<int, std::string>	_sendbuf;
 
 	public:
 		Server(const uint16_t port, const std::string &password);
@@ -33,5 +35,7 @@ class Server
 		void Accept();
 		void SetupSocket();
 		bool Receive(int fd);
+		bool Send(size_t i);
+		void QueueMessage(int fd, const std::string &msg);
 		void Disconnect(size_t i);
 };

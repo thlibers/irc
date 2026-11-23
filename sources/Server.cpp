@@ -71,10 +71,26 @@ void Server::Run()
 					Accept();
 				}
 			}
-			else if(Receive(_pollfds[i].fd) == false)
+			else
 			{
-				Disconnect(i);
-				i--;
+				// alive passe a false des qu une etape dit "ce client est a deconnecter" :
+				// ca evite d appeler Send() sur un client mort et de deconnecter deux fois
+				bool alive = true;
+
+				// POLLIN = donnees a lire. POLLHUP / POLLERR = connexion coupee ou en erreur :
+				// on appelle quand meme Receive(), recv() renverra 0 ou -1 et donc false
+				if (_pollfds[i].revents & (POLLIN | POLLHUP | POLLERR))
+					alive = Receive(_pollfds[i].fd);
+				// POLLOUT = le client peut recevoir, on vide son buffer d envoi
+				if (alive && (_pollfds[i].revents & POLLOUT))
+					alive = Send(i);
+				if (!alive)
+				{
+					Disconnect(i);
+					// la case i a ete supprimee, la suivante a pris sa place :
+					// on recule pour ne pas la sauter au i++ de la boucle
+					i--;
+				}
 			}
 		}
 	}
@@ -138,6 +154,13 @@ void Server::SetupSocket()
 	_pollfds.push_back(pfd);
 }
 
+/*
+ * @brief: recupere une connexion en attente sur _listenfd et commence a
+ *         surveiller le nouveau client.
+ * @note:
+ *     - le fd client est passe en non-bloquant (ca ne s herite pas de _listenfd)
+ *     - un echec n est pas fatal : on abandonne cette connexion, sans throw
+ */
 void Server::Accept()
 {
 	int fd = accept(_listenfd, NULL, NULL);
@@ -157,22 +180,93 @@ void Server::Accept()
 	std::cout << "New Client FD : " << fd << std::endl;
 }
 
+/*
+ * @brief: lit ce que le client a envoye (un seul recv() par reveil de poll())
+ *         et traite chaque ligne complete de son buffer de reception.
+ * @param: fd, le socket du client
+ * @return: false si le client est a deconnecter (connexion fermee ou erreur)
+ * @note:
+ *     - une ligne incomplete reste dans _recvbuf jusqu au prochain recv()
+ *     - pour l instant chaque ligne est renvoyee au client (echo de test)
+ */
 bool Server::Receive(int fd)
 {
 	char buf[512];
 	ssize_t n = recv(fd, buf, sizeof(buf), 0);
 	if(n <= 0)
 		return false;
-	std::string data(buf, n);
-	std::cout << "Fd " << fd << ": " << data << std::endl;
+	_recvbuf[fd].append(buf, n);
+	size_t pos = _recvbuf[fd].find("\n");
+	while (pos != std::string::npos)
+	{
+		// la ligne = tout ce qui precede le \n
+		std::string line = _recvbuf[fd].substr(0, pos);
+		// on retire du buffer la ligne et son \n (d'ou le + 1)
+		_recvbuf[fd].erase(0, pos + 1);
+		// IRC termine les lignes par \r\n : on enleve le \r s il est la.
+		// le test !empty() evite de lire line[-1] sur une ligne vide
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+		QueueMessage(fd, line + "\r\n");
+
+		// le buffer a change : on recherche la ligne suivante
+		pos = _recvbuf[fd].find("\n");
+	}
 	return true;
 }
 
+/*
+ * @brief: ferme la connexion d un client et oublie tout ce qui le concerne.
+ * @param: i, l index du client dans _pollfds (pas son fd)
+ * @note:
+ *     - supprime la case i : l appelant doit reculer son index de boucle
+ */
 void Server::Disconnect(size_t i)
 {
 	int fd = _pollfds[i].fd;
 	close(fd);
 	_clients.erase(fd);
 	_pollfds.erase(_pollfds.begin() + i);
+	_recvbuf.erase(fd);
+	_sendbuf.erase(fd);
 	std::cout << "Client : " << fd << " disconnected" << std::endl;
+}
+
+/*
+ * @brief: met un message en attente d envoi pour un client. Rien n est envoye
+ *         ici : on active POLLOUT et c est Send() qui fera le send().
+ * @param: fd, le socket du destinataire
+ * @param: msg, le texte a envoyer, "\r\n" compris
+ */
+void Server::QueueMessage(int fd, const std::string &msg)
+{
+	_sendbuf[fd] += msg;
+	for(size_t i = 0; i < _pollfds.size(); i++)
+	{
+		if(_pollfds[i].fd == fd)
+		{
+			_pollfds[i].events |= POLLOUT;
+		}
+	}
+}
+
+/*
+ * @brief: envoie au client ce que son buffer d envoi contient. Si tout n est
+ *         pas parti, le reste attend le prochain POLLOUT.
+ * @param: i, l index du client dans _pollfds
+ * @return: false si le client est a deconnecter
+ * @note:
+ *     - POLLOUT est desactive une fois le buffer vide, sinon poll() se
+ *       reveillerait en boucle
+ */
+bool Server::Send(size_t i)
+{
+	int fd = _pollfds[i].fd;
+	ssize_t n = send(fd, _sendbuf[fd].c_str(), _sendbuf[fd].size(), MSG_NOSIGNAL);
+	if(n <= 0)
+		return false;
+	_sendbuf[fd].erase(0, n);
+	if(_sendbuf[fd].empty())
+		_pollfds[i].events &= ~POLLOUT;
+	return true;
 }
