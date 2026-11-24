@@ -5,8 +5,8 @@
 #include "includes/Dispatcher.hpp"
 #include "includes/Message.hpp"
 #include "includes/namespace/helper.hpp"
-#include "includes/Message.hpp"
 #include "includes/irc.hpp"
+#include "includes/Server.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -42,11 +42,11 @@ Cli	&Cli::operator=(Cli &cpy)
 
 Cli::~Cli(void)
 {
-	// if (this->_server != NULL)
-		// delete _server;
-	;
+	if (this->_server != NULL)
+		delete _server;
 }
 
+#ifdef DEBUG
 static void	test_dispatcher(void)
 {
 	std::map<int, User *>	usr;
@@ -68,6 +68,7 @@ static void	test_dispatcher(void)
 
 	disp.executeCommand(5, str);
 }
+#endif /* DEBUG */
 /*
  * @brief: Parse arguments from argv and run the server
  * @throw:
@@ -87,6 +88,9 @@ void	Cli::run(void)
 		std::cerr << FR_BLUE
 				  << "[?] The debug mode is activated"
 				  << RESET << std::endl;
+#ifdef DEBUG
+		test_dispatcher();
+#endif /* DEBUG */
 	}
 	if (this->_argc < 3)
 		throw (Cli::Cli_error(ENOE_ARGS));
@@ -99,17 +103,16 @@ void	Cli::run(void)
 	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
 							 ", connect to it with the password \"" << password << "\""
 			  << RESET << std::endl;
-	test_dispatcher();
-	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
-	// try
-	// {
-	// 	this->_server = new Server(port, password)
-	// 	this->_server.run()
-	// }
-	// catch (std::bad_alloc &ex)
-	// {
-	// 	std::cerr << FR_RED << "[!] Failed to allocated memory for the server!" << std::endl;
-	// }
+
+	try
+	{
+		this->_server = new Server(port, password);
+		this->_server->Run();
+	}
+	catch (std::bad_alloc &ex)
+	{
+		std::cerr << FR_RED << "[!] Failed to allocated memory for the server!" << RESET << std::endl;
+	}
 }
 /*
  * @brief: The function that display the help message

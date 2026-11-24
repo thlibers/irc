@@ -16,15 +16,13 @@ User::User(void) :
 	_username("Anonymous"),
 	_real_name("Unknown"),
 	_password(""),
-	_fd(-1),
 	_channel_list()
 { ; }
-User::User(std::string nickname, std::string username, std::string real_name, std::string password, int fd) :
+User::User(const std::string &nickname, const std::string &username, const std::string &real_name, const std::string &password) :
 	_nickname(nickname),
 	_username(username),
 	_real_name(real_name),
 	_password(password),
-	_fd(fd),
 	_channel_list()
 { ; }
 User::User(User &cpy) :
@@ -32,7 +30,6 @@ User::User(User &cpy) :
 	_username(cpy._username),
 	_real_name(cpy._real_name),
 	_password(cpy._password),
-	_fd(cpy._fd),
 	_channel_list(cpy._channel_list)
 { ; }
 const User &User::operator=(User &cpy)
@@ -43,7 +40,6 @@ const User &User::operator=(User &cpy)
 		this->_username		= cpy._username;
 		this->_real_name	= cpy._real_name;
 		this->_password		= cpy._password;
-		this->_fd			= cpy._fd;
 		this->_channel_list	= cpy._channel_list;
 	}
 	return (*this);
@@ -93,13 +89,6 @@ void	User::setRealName(const std::string &realname) throw()
  */
 void	User::setPassword(const std::string &password) throw()
 { this->_password = password; }
-/*
- * @name: setFd
- * @brief: Change the socket fd associated of the user
- * @param: A int with the new socket fd of the user
- */
-void	User::setFd(const int &fd) throw()
-{ this->_fd = fd; }
 
 /*
  * ===============
@@ -135,13 +124,6 @@ const std::string	&User::getRealName(void) throw()
  */
 const std::string	&User::getPassword(void) throw()
 { return (this->_password); }
-/*
- * @name: getFd
- * @brief: Return the socket file descriptor associated of the user
- * @return: The socket number of the user
- */
-const int			&User::getFd(void) throw()
-{ return (this->_fd); }
 
 /*
  * ==========================
@@ -239,7 +221,7 @@ bool	User::removeChannel(Channel *channel_to_remove) throw()
  * @param: An std::string "channel_name" with the name of the channel we want check that the user is on
  * @return: The pointer to the channel class we are searching, NULL if the user is not on the channel
  */
-const Channel *User::getChannelByName(std::string &channel_name) const throw()
+Channel *User::getChannelByName(std::string &channel_name) const throw()
 {
 	for (channel_const_it it = this->_channel_list.begin() ; it != this->_channel_list.end(); ++it)
 	{
