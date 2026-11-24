@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - -I/home/gun8hoot/42/42-common-core/ft_irc
+    - -Wextra
+    - -Wall
+    - -std=c++98
