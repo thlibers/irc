@@ -1,4 +1,6 @@
-#include "includes/Channel.hpp"
+#include <includes/Channel.hpp>
+#include <cstring>
+#include <iterator>
 #include <algorithm>
 
 //	Helpers

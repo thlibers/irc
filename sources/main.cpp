@@ -1,6 +1,7 @@
 
 #include "includes/Cli.hpp"
-#include "includes/helper.hpp"
+#include "includes/namespace/helper.hpp"
+
 #include <exception>
 #include <iostream>
 

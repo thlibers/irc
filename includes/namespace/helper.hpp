@@ -12,6 +12,17 @@
 #define FR_BLUE "\e[34m"
 #define RESET "\e[0m"
 
+/*
+ * ======================================
+ * = CHANNEL CHARACTER VERIFICATION SET =
+ * ======================================
+ */
+#define CHANNEL_NAME_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#!&+")
+#define UPPER_CASE_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+#define LOWER_CASE_SET static_cast<std::string>("abcdefghijklmnopqrstuvwxyz")
+#define DIGIT_SET static_cast<std::string>("0123456789")
+#define SPECIAL_SET static_cast<std::string>("#!&+")
+
 namespace helper
 {
 	bool	strisdigit(char *str) throw();
@@ -40,5 +51,12 @@ namespace helper
 
 	std::string	strtrim(char *c_str) throw();
 	std::string	strtrim(std::string &str) throw();
+	std::string	strtrim(std::string &str, std::string set) throw();
+
+	bool		isSet(std::string character, std::string set);
+	bool		isSet(char character, std::string set);
+	bool		validChannelName(std::string &channel);
+
 	char		*strdup(char *tocpy);
+	char		*strdup(const char *tocpy);
 }

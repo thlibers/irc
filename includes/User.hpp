@@ -5,11 +5,13 @@
 
 class Channel;
 
-// TEMP LOCATION, MOVE IT ON CHANNEL.HPP LATER
-typedef std::vector<Channel*>::iterator			channel_it;
-typedef std::vector<Channel*>::const_iterator	channel_const_it;
-
-
+/*
+ * @brief: This class will contain every user related data
+ * @detail: On this class we will store generic data such as the username,
+ *     the nickname, the real name and the but password. But also a vector
+ *     "Channel" class pointer who represent every channel that the user have
+ *     joined.
+ */
 class User
 {
 	private:

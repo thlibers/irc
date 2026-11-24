@@ -1,9 +1,12 @@
 
 #include "includes/Cli.hpp"
-#include "includes/Message.hpp"
-#include "includes/Error.hpp"
-#include "includes/helper.hpp"
 #include "includes/User.hpp"
+#include "includes/Channel.hpp"
+#include "includes/Dispatcher.hpp"
+#include "includes/Message.hpp"
+#include "includes/namespace/helper.hpp"
+#include "includes/Message.hpp"
+#include "includes/irc.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -12,6 +15,7 @@
 #include <new>
 #include <stdexcept>
 #include <vector>
+#include <map>
 
 /*
  * =============
@@ -42,6 +46,28 @@ Cli::~Cli(void)
 		// delete _server;
 	;
 }
+
+static void	test_dispatcher(void)
+{
+	std::map<int, User *>	usr;
+	std::vector<Channel *>	ch;
+	Dispatcher				disp(&usr, &ch);
+	char*					str = (char*)"PRIVMSG nick2 : Hello world!";
+
+	usr[1] = new(std::nothrow) User("nick1", "usr1", "real", "pass");
+	usr[2] = new(std::nothrow) User("nick2", "usr2", "real", "pass");
+	usr[3] = new(std::nothrow) User("nick3", "usr3", "real", "pass");
+	usr[4] = new(std::nothrow) User("nick4", "usr4", "real", "pass");
+	usr[5] = new(std::nothrow) User("nick5", "usr5", "real", "pass");
+	usr[7] = new(std::nothrow) User("nick6", "usr6", "real", "pass");
+
+	for (std::map<int, User *>::iterator it = usr.begin(); it != usr.end(); ++it)
+	{
+		std::cout << "fd = " <<  (*it).first << " ; nickname = " << (*it).second->getNickname() << std::endl;
+	}
+
+	disp.executeCommand(5, str);
+}
 /*
  * @brief: Parse arguments from argv and run the server
  * @throw:
@@ -71,28 +97,9 @@ void	Cli::run(void)
 	password = helper::checkPassword(this->_argv[2]);
 
 	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
-							 ", connect to it with the password \"" << helper::strtrim(password) << "\""
+							 ", connect to it with the password \"" << password << "\""
 			  << RESET << std::endl;
-
-	try
-	{
-		char	*raw = (char *)"PRIVMSG #channel, user1,user2 : Hello world\r\n";
-		Message	msg(raw);
-		// msg.parse();
-		if (DEBUG)
-		{
-			std::cout << "Command: " << msg.getCommand() << std::endl
-		  			  << "First parameter: " <<  msg.getParameter()[0] << std::endl
-					  << "Second parameter: " <<  msg.getParameter()[1] << std::endl
-					  << "Third parameter: " <<  msg.getParameter()[2] << std::endl
-					  << "Text message: \"" << msg.getTextMessage() << "\"" << std::endl;
-		}
-	}
-	catch (std::exception &ex)
-	{
-		std::cerr << ex.what() << std::endl;
-	}
-
+	test_dispatcher();
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try
 	// {
@@ -113,13 +120,11 @@ void	Cli::help(void) throw()
 			  << "    {PORT} = The number of the port to use" << std::endl
 			  << "    {PASSWORD} = The password to connect to the server" << std::endl;
 }
-
 /*
  * =======================
  * = CLI_ERROR EXCEPTION =
  * =======================
  */
-
 Cli::Cli_error::Cli_error(void) : std::runtime_error(""), _message("undefined cli_error") { ; }
 Cli::Cli_error::Cli_error(const std::string message) : std::runtime_error(""), _message(message) { ; }
 Cli::Cli_error::~Cli_error(void) throw() { ; }
