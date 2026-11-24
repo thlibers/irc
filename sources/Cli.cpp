@@ -2,6 +2,7 @@
 #include "includes/Cli.hpp"
 #include "includes/Error.hpp"
 #include "includes/helper.hpp"
+#include "includes/User.hpp"
 
 #include <inttypes.h>
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <exception>
 #include <new>
 #include <stdexcept>
+#include <vector>
 
 /*
  * =============
@@ -70,7 +72,6 @@ void	Cli::run(void)
 	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
 							 ", connect to it with the password \"" << helper::strtrim(password) << "\""
 			  << RESET << std::endl;
-
 	// -- Uncomment when the server is ready to be launched (need to uncomment some line on destrucotor too) --
 	// try
 	// {
