@@ -1,6 +1,19 @@
 #include "includes/Server.hpp"
 #include <unistd.h>
 #include <cerrno>
+#include <csignal>
+
+static volatile sig_atomic_t g_signal = 0;
+
+/*
+ * @brief: handler de SIGINT (Ctrl+C) et SIGQUIT (Ctrl+\). Leve g_signal pour
+ *			que la boucle de Run() s arrete et que le serveur quitte proprement.
+ */
+static void handleSignal(int sig)
+{
+	(void)sig;
+	g_signal = 1;
+}
 
 Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
 
@@ -41,9 +54,17 @@ void Server::Stop()
 */
 void Server::Run()
 {
+	//premiere ligne handle le Ctrl + C
+	// deuxieme ligne handle Ctrl + \ ;
+	// troisieme ligne evite que le serv crash auto si on veut
+	// ecrire sur une connexion fermee que le serv a pas encore traitee (ca ignore ce signal SIGPIPE)
+	signal(SIGINT, handleSignal);
+	signal(SIGQUIT, handleSignal);
+	signal(SIGPIPE, SIG_IGN);
+
 	SetupSocket();
 	_running = true;
-	while (_running)
+	while (_running && !g_signal)
 	{
 		// poll() ne lit ni n ecrit rien : ca endort le processus jusqu a ce qu au
 		// moins un fd surveille soit pret, et ca renseigne les champs revents et
@@ -94,6 +115,7 @@ void Server::Run()
 			}
 		}
 	}
+	std::cout << "Server stopped" << std::endl;
 }
 
 /*
