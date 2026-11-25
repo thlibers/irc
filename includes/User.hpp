@@ -1,5 +1,6 @@
 
 #pragma once
+#include <inttypes.h>
 #include <string>
 #include <vector>
 
@@ -10,9 +11,8 @@ typedef std::vector<Channel *>::iterator channel_it;
 /*
  * @brief: This class will contain every user related data
  * @detail: On this class we will store generic data such as the username,
- *     the nickname, the real name and the but password. But also a vector
- *     "Channel" class pointer who represent every channel that the user have
- *     joined.
+ *     the nickname, the real name. But also a vector "Channel" class pointer
+ *     who represent every channel that the user have joined.
  */
 class User
 {
@@ -25,18 +25,28 @@ class User
 		std::string				_username;
 		// The real name of the user
 		std::string				_real_name;
-		// The password of the user
-		std::string				_password;
+		// The fd of the client socket linked to this user, -1 until set
+		int						_fd;
 		// A vector with every channel that the user is on
-		std::vector<Channel *>	_channel_list;
+		std::vector<Channel *>	_channel_joined;
+		// 8bits that define if a user is registerd or not
+		uint8_t					_registered_flags;
 
 	public:
-		// --- CONSTRUCTOR / DESTRUCTOR ---
+		// --- ENUMS ---
+		typedef enum e_register_status
+		{
+			UNREGISTER = 0,
+			PASSWD_SUPPLIED = 0b1,
+			NICK_SUPPLIED = 0b10,
+			USR_SUPPLIED = 0b100,
+			REGISTER = PASSWD_SUPPLIED | NICK_SUPPLIED | USR_SUPPLIED
 
+		}			 t_register_status;
+
+		// --- CONSTRUCTOR / DESTRUCTOR ---
 		User(void);
-		User(const std::string &nickname, const std::string &username, const std::string &real_name, const std::string &password);
-		User(User &cpy);
-		const User &operator=(User &cpy);
+		User(const std::string &nickname, const std::string &username, const std::string &real_name);
 		~User(void);
 
 		// --- SETTER ---
@@ -44,14 +54,14 @@ class User
 		void	setNickname(const std::string &nickname) throw();
 		void	setUsername(const std::string &username) throw();
 		void	setRealName(const std::string &realname) throw();
-		void	setPassword(const std::string &password) throw();
+		void	setFd(int fd) throw();
 
 		// --- GETTER ---
 
 		const std::string	&getNickname(void) throw();
 		const std::string	&getUsername(void) throw();
 		const std::string	&getRealName(void) throw();
-		const std::string	&getPassword(void) throw();
+		int					getFd(void) const throw();
 
 		// --- USER CHANNEL ---
 
@@ -63,10 +73,13 @@ class User
 		bool	removeChannel(Channel *channel) throw();
 		Channel *getChannelByName(std::string &channel_name) const throw();
 
+		// --- USER COMMAND ---
+		uint8_t	isRegisted(void) const throw();
+		void	setFlag(uint8_t flag) throw();
+
 		static User	*createNewUser(std::string &nickname,
 								   std::string &username,
-								   std::string &realname,
-								   std::string &password);
+								   std::string &realname);
 };
 
 typedef std::vector<User*>::iterator		user_it;

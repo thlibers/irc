@@ -9,6 +9,9 @@
 # define DEBUG false
 #endif
 
+#define FR_RED "\e[31m"
+#define RESET "\e[0m"
+
 class Server;
 
 /*

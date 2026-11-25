@@ -1,7 +1,8 @@
 
 #include "includes/Cli.hpp"
+#include "includes/Logging.hpp"
 #include "includes/User.hpp"
-#include "includes/Channel.hpp"
+#include "includes/channel/Channel.hpp"
 #include "includes/Dispatcher.hpp"
 #include "includes/Message.hpp"
 #include "includes/namespace/helper.hpp"
@@ -46,29 +47,6 @@ Cli::~Cli(void)
 		delete _server;
 }
 
-#ifdef DEBUG
-static void	test_dispatcher(void)
-{
-	std::map<int, User *>	usr;
-	std::vector<Channel *>	ch;
-	Dispatcher				disp(&usr, &ch);
-	char*					str = (char*)"PRIVMSG nick2 : Hello world!";
-
-	usr[1] = new(std::nothrow) User("nick1", "usr1", "real", "pass");
-	usr[2] = new(std::nothrow) User("nick2", "usr2", "real", "pass");
-	usr[3] = new(std::nothrow) User("nick3", "usr3", "real", "pass");
-	usr[4] = new(std::nothrow) User("nick4", "usr4", "real", "pass");
-	usr[5] = new(std::nothrow) User("nick5", "usr5", "real", "pass");
-	usr[7] = new(std::nothrow) User("nick6", "usr6", "real", "pass");
-
-	for (std::map<int, User *>::iterator it = usr.begin(); it != usr.end(); ++it)
-	{
-		std::cout << "fd = " <<  (*it).first << " ; nickname = " << (*it).second->getNickname() << std::endl;
-	}
-
-	disp.executeCommand(5, str);
-}
-#endif /* DEBUG */
 /*
  * @brief: Parse arguments from argv and run the server
  * @throw:
@@ -83,36 +61,26 @@ void	Cli::run(void)
 	std::string password;
 	uint16_t	port;
 
-	if (DEBUG != false)
-	{
-		std::cerr << FR_BLUE
-				  << "[?] The debug mode is activated"
-				  << RESET << std::endl;
-#ifdef DEBUG
-		test_dispatcher();
-#endif /* DEBUG */
-	}
+	/* Show who tell that DEBUG mode is activated if the user
+	 * have compiled with -DDEBUG (e.g make re DEUBG=1) */
+	#ifdef DEBUG
+	Logging::warn() << "The debug mode is activated";
+	#endif
+	/* Check the arguments count (argc) */
 	if (this->_argc < 3)
 		throw (Cli::Cli_error(ENOE_ARGS));
 	else if (this->_argc > 3)
 		throw (Cli::Cli_error(ETOM_ARGS));
 
+	/* Check that both given port and password by the user is valid */
 	port = helper::checkPort(this->_argv[1]);
 	password = helper::checkPassword(this->_argv[2]);
 
-	std::cout << FR_GREEN << "[DEBUG] Server will listen on port: " << port <<
-							 ", connect to it with the password \"" << password << "\""
-			  << RESET << std::endl;
-
-	try
-	{
-		this->_server = new Server(port, password);
-		this->_server->Run();
-	}
-	catch (std::bad_alloc &ex)
-	{
-		std::cerr << FR_RED << "[!] Failed to allocated memory for the server!" << RESET << std::endl;
-	}
+	/* Create and run the server without */
+	this->_server = new(std::nothrow) Server(port, password);
+	if (!this->_server)
+		throw (std::runtime_error("[!] Failed to allocated memory for the server!"));
+	this->_server->Run();
 }
 /*
  * @brief: The function that display the help message

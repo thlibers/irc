@@ -8,36 +8,19 @@
 #include <exception>
 #include <iostream>
 
-Message::Message(void) : _user(NULL), _command(""), _parameter(), _text_message("") { ; }
-Message::Message(Message &cpy) : _user(cpy._user), _command(cpy._command), _parameter(cpy._parameter), _text_message("") { ; };
-Message	&Message::operator=(Message &cpy)
+Message::Message(User &user, const char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
 {
-	if (this != &cpy)
-	{
-		this->_user = cpy._user;
-		this->_command = cpy._command;
-		this->_parameter = cpy._parameter;
-		this->_text_message = cpy._text_message;
-		if (this->_raw_message != NULL)
-			delete[] this->_raw_message;
-		this->_raw_message = cpy._raw_message;
-	}
-	return (*this);
-}
-Message::Message(User *user, const char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(NULL)
-{
-	if (this->_raw_message)
-		delete []this->_raw_message;
-	this->_raw_message = helper::strdup(raw_str);
 	this->parse();
 };
-Message::Message(User *user, char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(NULL)
+Message::Message(User &user, char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
 {
-	if (this->_raw_message)
-		delete []this->_raw_message;
-	this->_raw_message = helper::strdup(raw_str);
 	this->parse();
 };
+Message::Message(User &user, const std::string &raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
+{
+	this->parse();
+};
+Message::Message(Message &cpy) : _user(cpy._user), _command(cpy._command), _parameter(cpy._parameter), _text_message(cpy._text_message), _raw_message(cpy._raw_message) { ; };
 /*
  * @brief: Helper function to parse comma-separated parameters
  * @param: token - The token potentially containing comma-separated values
@@ -61,8 +44,6 @@ void Message::_parseCommaSeparatedParams(const std::string& token)
  *         - The command
  *         - The parameter
  *         - The "real" content of the message
- * @throw:
- *     - std::runtime_error with his corresponding error message
  * @note:
  *     - Parameters can be comma-separated (e.g., "#ch1,#ch2")
  *     - Trailing text (after ":") is kept as-is
@@ -73,9 +54,11 @@ void Message::parse(void)
 	std::istringstream	stream(this->_raw_message);
 	std::string			token;
 
-	if (!(stream >> token))
-		throw std::runtime_error("Empty message");
-	this->_command = token;
+	// Get the first token
+	stream >> token;
+
+	// The first token is always the command
+	this->_command = helper::strupper(token);
 
 	while (stream >> token)
 	{
@@ -98,10 +81,11 @@ void Message::parse(void)
 	this->_text_message = helper::strtrim(this->_text_message);
 }
 
-std::string					Message::getCommand(void) const throw() { return (this->_command); }
-std::vector<std::string>	Message::getParameter(void) const throw() { return (this->_parameter); }
-std::string					Message::getTextMessage(void) const throw() { return (this->_text_message); }
-char						*Message::getRawMessage(void) const throw() { return (this->_raw_message); }
+const User						&Message::getUser(void) const throw() { return (this->_user); }
+const std::string				&Message::getCommand(void) const throw() { return (this->_command); }
+const std::vector<std::string>	&Message::getParameter(void) const throw() { return (this->_parameter); }
+const std::string				&Message::getTextMessage(void) const throw() { return (this->_text_message); }
+const std::string				&Message::getRawMessage(void) const throw() { return (this->_raw_message); }
 
 void						Message::debug(void) const throw()
 {

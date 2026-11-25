@@ -1,4 +1,5 @@
 #pragma once
+#include "includes/Dispatcher.hpp"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -12,7 +13,8 @@
 #include <cstring>
 #include <inttypes.h> // uint16_t lib
 
-class Client;
+class User;
+class Channel;
 
 class Server
 {
@@ -22,9 +24,11 @@ class Server
 		int							_listenfd;			//socket(du serveur) qui attend les ecoutes
 		bool						_running;			//status, permet de sortir de la boucle au bon moment
 		std::vector<struct pollfd>	_pollfds;			// fd que la fonction poll() surveille
-		std::map<int, Client*>		_clients;			// retrouver un client via son fd (chaque client a un fd et un objet de la classe client)
+		std::map<int, User*>		_clients;			// retrouver un client via son fd (chaque client a un fd et un objet de la classe client)
 		std::map<int, std::string>	_recvbuf;
 		std::map<int, std::string>	_sendbuf;
+		Dispatcher					*_dispatcher;		// A pointer the dispatcher object
+		std::vector<Channel *>		_channel;			// A vector who will store every channel availables
 
 	public:
 		Server(const uint16_t port, const std::string &password);

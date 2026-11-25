@@ -1,0 +1,9 @@
+--tool=memcheck
+--leak-check=full
+--show-leak-kinds=all
+--errors-for-leak-kinds=all
+--error-exitcode=1
+--leak-resolution=high
+--num-callers=30
+--track-fds=yes
+--track-origins=yes

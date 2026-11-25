@@ -11,49 +11,39 @@
  * = USER CONSTRUCTOR/DESTRUCTOR =
  * ===============================
  */
+
+/*
+ * @name:  User
+ * @brief: The default constructor of our User class, will set every private
+ *         attribute to empty
+ */
 User::User(void) :
-	_nickname("Anonymous"),
-	_username("Anonymous"),
-	_real_name("Unknown"),
-	_password(""),
-	_channel_list()
+	_nickname(""),
+	_username(""),
+	_real_name(""),
+	_fd(-1),
+	_channel_joined(),
+	_registered_flags(User::UNREGISTER)
 { ; }
-User::User(const std::string &nickname, const std::string &username, const std::string &real_name, const std::string &password) :
+/*
+ * @name: User
+ * @brief: The constructor of the User class. This class is the representation
+ *         of a data associated to a client such as his username, password, ...
+ * @param: nickname, the nickname of the user. This data should be unique
+ *         through the entire IRC server
+ * @param: username, the username associated of the user
+ * @param: real_name, the real name of the user
+ * @param: password, the password associated of the user
+ */
+User::User(const std::string &nickname, const std::string &username, const std::string &real_name) :
 	_nickname(nickname),
 	_username(username),
 	_real_name(real_name),
-	_password(password),
-	_channel_list()
+	_fd(-1),
+	_channel_joined(),
+	_registered_flags(User::UNREGISTER)
 { ; }
-User::User(User &cpy) :
-	_nickname(cpy._nickname),
-	_username(cpy._username),
-	_real_name(cpy._real_name),
-	_password(cpy._password),
-	_channel_list(cpy._channel_list)
-{ ; }
-const User &User::operator=(User &cpy)
-{
-	if (this != &cpy)
-	{
-		this->_nickname		= cpy._nickname;
-		this->_username		= cpy._username;
-		this->_real_name	= cpy._real_name;
-		this->_password		= cpy._password;
-		this->_channel_list	= cpy._channel_list;
-	}
-	return (*this);
-}
-User::~User(void)
-{
-	// Safely clean every password on memory (broken)
-	// if (!this->_password.empty())
-	// {
-	// 	std::memset(&this->_password[0], 0, this->_password.length());
-	// 	this->_password.clear();
-	// }
-}
-
+User::~User(void) { ; }
 
 /*
  * ===============
@@ -83,12 +73,12 @@ void	User::setUsername(const std::string &username) throw()
 void	User::setRealName(const std::string &realname) throw()
 { this->_real_name = realname; }
 /*
- * @name: setPassword
- * @brief: Change the new password of the user
- * @param: A std::string with the new password of the user
+ * @name: setFd
+ * @brief: Set the fd of the client socket linked to this user
+ * @param: The fd of the client socket
  */
-void	User::setPassword(const std::string &password) throw()
-{ this->_password = password; }
+void	User::setFd(int fd) throw()
+{ this->_fd = fd; }
 
 /*
  * ===============
@@ -118,12 +108,12 @@ const std::string	&User::getUsername(void) throw()
 const std::string	&User::getRealName(void) throw()
 { return (this->_real_name); }
 /*
- * @name: getPassword
- * @brief: Return the password of the user
- * @return: The password of the user
+ * @name: getFd
+ * @brief: Return the fd of the client socket linked to this user
+ * @return: The fd of the user, -1 if it was never set
  */
-const std::string	&User::getPassword(void) throw()
-{ return (this->_password); }
+int	User::getFd(void) const throw()
+{ return (this->_fd); }
 
 /*
  * ==========================
@@ -140,7 +130,7 @@ const std::string	&User::getPassword(void) throw()
  */
 bool	User::isOnChannel(Channel &channel) const throw()
 {
-	for (channel_const_it it = this->_channel_list.begin() ; it != this->_channel_list.end(); ++it)
+	for (channel_const_it it = this->_channel_joined.begin() ; it != this->_channel_joined.end(); ++it)
 	{
 		if (*it == &channel)
 		{
@@ -152,7 +142,7 @@ bool	User::isOnChannel(Channel &channel) const throw()
 }
 bool	User::isOnChannel(std::string &channel_name) const throw()
 {
-	for (channel_const_it it = this->_channel_list.begin() ; it != this->_channel_list.end(); ++it)
+	for (channel_const_it it = this->_channel_joined.begin() ; it != this->_channel_joined.end(); ++it)
 	{
 		if ((*it)->getName() == channel_name)
 		{
@@ -173,7 +163,7 @@ bool	User::addChannel(Channel &channel_to_add) throw()
 	if (this->isOnChannel(channel_to_add))
 		return (false);
 
-	this->_channel_list.push_back(&channel_to_add);
+	this->_channel_joined.push_back(&channel_to_add);
 	return (true);
 }
 bool	User::addChannel(Channel *channel_to_add) throw()
@@ -181,7 +171,7 @@ bool	User::addChannel(Channel *channel_to_add) throw()
 	if (this->isOnChannel(*channel_to_add))
 		return (false);
 
-	this->_channel_list.push_back(channel_to_add);
+	this->_channel_joined.push_back(channel_to_add);
 	return (true);
 }
 /*
@@ -192,11 +182,11 @@ bool	User::addChannel(Channel *channel_to_add) throw()
  */
 bool	User::removeChannel(Channel &channel_to_remove) throw()
 {
-	for (channel_it it = _channel_list.begin() ; it != this->_channel_list.end(); ++it)
+	for (channel_it it = _channel_joined.begin() ; it != this->_channel_joined.end(); ++it)
 	{
 		if (*it == &channel_to_remove)
 		{
-			this->_channel_list.erase(it);
+			this->_channel_joined.erase(it);
 			return (true);
 		}
 	}
@@ -204,11 +194,11 @@ bool	User::removeChannel(Channel &channel_to_remove) throw()
 }
 bool	User::removeChannel(Channel *channel_to_remove) throw()
 {
-	for (channel_it it = this->_channel_list.begin() ; it != this->_channel_list.end() ; ++it)
+	for (channel_it it = this->_channel_joined.begin() ; it != this->_channel_joined.end() ; ++it)
 	{
 		if (*it == channel_to_remove)
 		{
-			this->_channel_list.erase(it);
+			this->_channel_joined.erase(it);
 			return (true);
 		}
 	}
@@ -223,7 +213,7 @@ bool	User::removeChannel(Channel *channel_to_remove) throw()
  */
 Channel *User::getChannelByName(std::string &channel_name) const throw()
 {
-	for (channel_const_it it = this->_channel_list.begin() ; it != this->_channel_list.end(); ++it)
+	for (channel_const_it it = this->_channel_joined.begin() ; it != this->_channel_joined.end(); ++it)
 	{
 		if ((*it)->getName() == channel_name)
 			return (*it);
@@ -231,21 +221,32 @@ Channel *User::getChannelByName(std::string &channel_name) const throw()
 	return (NULL);
 }
 
+uint8_t	User::isRegisted(void) const throw()
+{
+	return (this->_registered_flags & REGISTER);
+}
+
+/*
+ * @name: setFlag
+ * @brief: Raise one or more registration flag(s) on the user
+ * @param: A uint8_t with the flag(s) to raise, from the e_register_status enum
+ */
+void	User::setFlag(uint8_t flag) throw()
+{ this->_registered_flags |= flag; }
+
 /*
  * @brief: This function is wrapper to easly create a new User
  * @param: nickname, the nickname of the user. This data should be unique throught the entier IRC server
  * @param: username, the username associated of the user
  * @param: real name, the real name of the user
- * @param: password, the password associated of the user
  * @return: Return the new created user or NULL if the user cannot be created
  */
 User	*User::createNewUser(std::string &nickname,
 							std::string &username,
-							std::string &realname,
-							std::string &password)
+							std::string &realname)
 {
 	User *new_user;
 
-	new_user = new(std::nothrow) User(nickname, username, realname, password);
+	new_user = new(std::nothrow) User(nickname, username, realname);
 	return (new_user);
 }

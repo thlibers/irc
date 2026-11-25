@@ -6,11 +6,6 @@
 #include <string>
 #include <inttypes.h>
 
-#define FR_RED "\e[31m"
-#define FR_GREEN "\e[32m"
-#define FR_YELLOW "\e[33m"
-#define FR_BLUE "\e[34m"
-#define RESET "\e[0m"
 
 /*
  * ======================================
@@ -18,6 +13,7 @@
  * ======================================
  */
 #define CHANNEL_NAME_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#!&+")
+#define ALPHABET_SET static_cast<std::string>("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 #define UPPER_CASE_SET static_cast<std::string>("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 #define LOWER_CASE_SET static_cast<std::string>("abcdefghijklmnopqrstuvwxyz")
 #define DIGIT_SET static_cast<std::string>("0123456789")
@@ -59,4 +55,6 @@ namespace helper
 
 	char		*strdup(char *tocpy);
 	char		*strdup(const char *tocpy);
+
+	std::string strupper(const std::string &str);
 }

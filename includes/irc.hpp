@@ -18,6 +18,8 @@
 // Error throw if a "new" operator failed
 #define EMEMORY "Failed to allocated memory!"
 
+#define EUSER_CREATION "ERROR: The server failed to allocated memory for you\r\n"
+
 
 /*
  * ===================
@@ -32,7 +34,7 @@
 #define RPL_YOURHOST                 002
 #define RPL_CREATED                  003
 #define RPL_MYINFO                   004
-#define RPL_ISUPPORT                 005  // Widely used; server-specific extension
+#define RPL_ISUPPORT                 005
 
 /*
  * Every IRC codes for trace and server statistics (will probably be useless)
@@ -184,3 +186,5 @@
 #define ERR_NOOPERHOST               491
 #define ERR_UMODEUNKNOWNFLAG         501
 #define ERR_USERSDONTMATCH           502
+// Modern extension (not in RFC 1459): parameter of a mode letter invalid
+#define ERR_INVALIDMODEPARAM         696

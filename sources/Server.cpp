@@ -1,4 +1,11 @@
 #include "includes/Server.hpp"
+#include "includes/Dispatcher.hpp"
+#include "includes/Logging.hpp"
+#include "includes/User.hpp"
+#include "includes/irc.hpp"
+#include <new>
+#include <stdexcept>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
 #include <csignal>
@@ -15,7 +22,14 @@ static void handleSignal(int sig)
 	g_signal = 1;
 }
 
-Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false) { }
+Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false)
+{
+	// Create the dispatcher object, the "std::nothrow" avoid new to throw a std::bad_alloc exception.
+	// Ive do this to get a nice message output instead of a regular "Allocation failed: std::bad_alloc"
+	this->_dispatcher = new(std::nothrow) Dispatcher(this->_clients, this->_channel, this->_psswd);
+	if (!this->_dispatcher)
+		throw (std::runtime_error("Failed to allocated memory for the command dispatcher"));
+}
 
 // le but ici est de liberer chaque client -> fermer son fd, et delete sa "fiche" client
 // pour se balader dans la map client on a besoin d un iterateur, end pointe sur l element apres le dernier (comme '\0' sur une string)
@@ -24,13 +38,14 @@ Server::Server(const uint16_t port, const std::string &password): _port(port), _
 // si jamais le socket serveur ecoute, faut le close aussi (_listenfd)
 Server::~Server()
 {
-	for (std::map<int, Client*>::iterator it = _clients.begin();
+	if (this->_dispatcher)
+		delete (this->_dispatcher);
+	for (std::map<int, User*>::iterator it = _clients.begin();
 		it != _clients.end();
 		++it)
 	{
 		close(it->first);
-		// TODO: decommenter quand la classe Client existe (delete sur type incomplet = erreur avec -Werror)
-		// delete it->second;
+		delete it->second;
 	}
 	_clients.clear();
 	if(_listenfd != -1)
@@ -64,6 +79,7 @@ void Server::Run()
 
 	SetupSocket();
 	_running = true;
+	Logging::info() << "The server has been launched";
 	while (_running && !g_signal)
 	{
 		// poll() ne lit ni n ecrit rien : ca endort le processus jusqu a ce qu au
@@ -115,7 +131,7 @@ void Server::Run()
 			}
 		}
 	}
-	std::cout << "Server stopped" << std::endl;
+	Logging::info() << "Server have been stopped";
 }
 
 /*
@@ -198,8 +214,24 @@ void Server::Accept()
 	pfd.events = POLLIN;
 	pfd.revents = 0;
 	_pollfds.push_back(pfd);
-	_clients[fd] = NULL;
-	std::cout << "New Client FD : " << fd << std::endl;
+
+	// Create the "User" object associated with the fd
+	_clients[fd] = new(std::nothrow) User();
+	if (!this->_clients[fd])
+	{
+		Logging::error() << "Failed to create the client for fd " << fd;
+
+		// Idk what im doing rn
+		send(fd, EUSER_CREATION, 56, MSG_NOSIGNAL);
+		close(fd);
+		_pollfds.pop_back();
+		_clients.erase(fd);
+	}
+	else
+	{
+		this->_clients[fd]->setFd(fd);
+		Logging::ok() << "New Client FD : " << fd;
+	}
 }
 
 /*
@@ -251,7 +283,8 @@ void Server::Disconnect(size_t i)
 	_pollfds.erase(_pollfds.begin() + i);
 	_recvbuf.erase(fd);
 	_sendbuf.erase(fd);
-	std::cout << "Client : " << fd << " disconnected" << std::endl;
+	delete _clients[fd];
+	Logging::ok() << "Client : " << fd << " disconnected";
 }
 
 /*
@@ -262,6 +295,15 @@ void Server::Disconnect(size_t i)
  */
 void Server::QueueMessage(int fd, const std::string &msg)
 {
+	uint16_t return_code;
+
+	(void)return_code;
+	if (msg.empty())
+		return;
+	/* Dispatcher problaly here */
+	return_code = _dispatcher->executeCommand(fd, msg);
+
+	/* Placeholder that return the message sent by the user */
 	_sendbuf[fd] += msg;
 	for(size_t i = 0; i < _pollfds.size(); i++)
 	{

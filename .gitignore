@@ -4,4 +4,4 @@ ircserv
 .objects
 *.o
 .cache
-TODO.md
+vgcore*
