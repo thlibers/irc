@@ -221,8 +221,8 @@ void Server::Accept()
 	{
 		Logging::error() << "Failed to create the client for fd " << fd;
 
-		// Idk what im doing rn
-		send(fd, EUSER_CREATION, 56, MSG_NOSIGNAL);
+		// pas de send() ici : le sujet interdit tout send()/recv() hors de poll().
+		// On abandonne simplement la connexion, le client verra le socket se fermer
 		close(fd);
 		_pollfds.pop_back();
 		_clients.erase(fd);
@@ -279,11 +279,17 @@ void Server::Disconnect(size_t i)
 {
 	int fd = _pollfds[i].fd;
 	close(fd);
-	_clients.erase(fd);
+	// find() et pas _clients[fd] : operator[] recreerait une entree si elle n existe pas.
+	// On delete l objet AVANT d effacer l entree, sinon on perd le pointeur (fuite)
+	std::map<int, User*>::iterator it = _clients.find(fd);
+	if (it != _clients.end())
+	{
+		delete it->second;
+		_clients.erase(it);
+	}
 	_pollfds.erase(_pollfds.begin() + i);
 	_recvbuf.erase(fd);
 	_sendbuf.erase(fd);
-	delete _clients[fd];
 	Logging::ok() << "Client : " << fd << " disconnected";
 }
 

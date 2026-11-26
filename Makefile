@@ -1,7 +1,7 @@
 NAME		=	ircserv
 
 COMPILER	=	c++
-FLAGS		=	-Wall -Wextra -Werror -std=c++98 -I. -c
+FLAGS		=	-Wall -Wextra -Werror -std=c++98 -I. -c -MMD -MP
 
 ifdef DEBUG
 FLAGS		+= -DDEBUG -g3
@@ -13,6 +13,7 @@ OBJECT_DIR	=	.objects
 
 SOURCES		=	$(shell find . -name "*.cpp" 2>/dev/null)
 OBJECTS		=	$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(SOURCES))
+DEPS		=	$(OBJECTS:.o=.d)
 
 all: $(NAME)
 
@@ -35,4 +36,6 @@ fclean: clean
 
 re: fclean $(NAME)
 
-.PHONY: all re fclean clean $(NAME)
+.PHONY: all re fclean clean
+
+-include $(DEPS)
