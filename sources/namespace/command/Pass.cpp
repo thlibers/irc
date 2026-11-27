@@ -21,6 +21,7 @@ command::Pass::~Pass(void) { ; }
 replies::t_return_info	command::Pass::run(void)
 {
 	std::vector<std::string>	params = this->_message.getParameter();
+	replies::rtn_i_t			info;
 
 	// If a client is already registered
 	if ((_user.isRegisted() & ::User::REGISTER) == ::User::REGISTER)
@@ -47,11 +48,12 @@ replies::t_return_info	command::Pass::run(void)
 	Logging::info() << this->_user.getFd() << " have connected using the password : " << params[0];
 	#endif
 
+	info = this->_makeReturnInfo(0);
 	// Set the password flag to 1
 	this->_user.setFlag(::User::PASSWD_SUPPLIED);
 	#ifdef DEBUG
 	Logging::info() << "Client " << this->_user.getFd() << " bits states " << std::bitset<3>(this->_user.isRegisted()).to_string();
 	#endif
 
-	return (this->_makeReturnInfo(0));
+	return (info);
 }

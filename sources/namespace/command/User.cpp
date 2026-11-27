@@ -27,8 +27,9 @@ static bool	isValidUsername(std::string &username)
 
 replies::t_return_info	command::User::run(void)
 {
-	std::vector<std::string> params = _message.getParameter();
-	std::size_t				 params_size = params.size();
+	std::vector<std::string> 	params = _message.getParameter();
+	std::size_t				 	params_size = params.size();
+	replies::rtn_i_t			info;
 
 	// If the user is already register, send a already register error
 	if ((_user.isRegisted() & _user.USR_SUPPLIED) == _user.USR_SUPPLIED)
@@ -71,11 +72,13 @@ replies::t_return_info	command::User::run(void)
 	Logging::info() << "Client " << _user.getFd() << " have set is realname to " << realname;
 	#endif
 
+	info = this->_makeReturnInfo(0);
+
 	// Set the USER flag to 1
 	this->_user.setFlag(::User::USR_SUPPLIED);
 	#ifdef DEBUG
 	Logging::info() << "Client " << this->_user.getFd() << " bits states " << std::bitset<3>(this->_user.isRegisted()).to_string();
 	#endif
 
-	return (this->_makeReturnInfo(0));
+	return (info);
 }

@@ -1,4 +1,5 @@
 
+#include "includes/namespace/Replies.hpp"
 #include "includes/namespace/commands.hpp"
 #include "includes/Logging.hpp"
 #include "includes/Message.hpp"
@@ -78,6 +79,7 @@ static bool	isAvailable(const std::string &nick,
 replies::t_return_info	command::Nick::run(void)
 {
 	std::vector<std::string>	params = this->_message.getParameter();
+	replies::rtn_i_t			info;
 
 	// Check if the user have send empty parameter
 	if (params.empty() || params[0].empty())
@@ -109,11 +111,13 @@ replies::t_return_info	command::Nick::run(void)
 	Logging::info() << "The client " << this->_user.getFd() << " has set is nickname to " << params[0];
 	#endif
 
+	info = this->_makeReturnInfo(0);
+
 	// Set the NICK flag
 	this->_user.setFlag(::User::NICK_SUPPLIED);
 	#ifdef DEBUG
 	Logging::info() << "Client " << this->_user.getFd() << " bits states " << std::bitset<3>(this->_user.isRegisted()).to_string();
 	#endif
 
-	return (this->_makeReturnInfo(0));
+	return (info);
 }
