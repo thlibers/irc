@@ -7,36 +7,44 @@
 #include <vector>
 #include <map>
 
+#include "includes/namespace/Replies.hpp"
+
 class User;
 class Channel;
 class Message;
+class Server;
 
 class Dispatcher
 {
 	private:
-		// A reference to the vector stored in the Server class how contain every channel
-		std::vector<Channel *>	&_all_channel;
-		// A reference to the vector stored in the Server class how contain every user
-		std::map<int, User *>	&_all_user;
-		// The password of the server provided in argv[2]
-		std::string 			&_password;
+		// The server who own this dispatcher: every user, every channel and
+		// the connection password are reached through it, and it gives
+		// access to QueueMessage to send the numeric replies
+		Server	&_server;
 
-		typedef uint16_t (Dispatcher::*Handler)(int, const Message &);
+		typedef replies::t_return_info (Dispatcher::*Handler)(int, const Message &);
 
 		std::map<std::string, Handler>	_handler;
 
 		// CONNECTION COMMAND HANDLER
-		uint16_t	_handlerPass(int fd, const Message &msg);
-		uint16_t	_handlerNick(int fd, const Message &msg);
-		// uint16_t	_handlerUser(int fd, const Message &msg);
+		replies::t_return_info	_handlerPass(int fd, const Message &msg);
+		replies::t_return_info	_handlerNick(int fd, const Message &msg);
+		replies::t_return_info	_handlerUser(int fd, const Message &msg);
 
+		// MESSAGE COMMAND HANDLER
+		replies::t_return_info	_handlerPrivmsg(int fd, const Message &msg);
 
-		// uint16_t	_handle_privmsg(int fd, const Message &msg);
+		// KEEP-ALIVE COMMAND HANDLER
+		replies::t_return_info	_handlerPing(int fd, const Message &msg);
+		replies::t_return_info	_handlerQuit(int fd, const Message &msg);
+		replies::t_return_info	_handlerJoin(int fd, const Message &msg);
+
+		Dispatcher::Handler		_getHandler(const std::string &cmd);
 
 	public:
-		Dispatcher(std::map<int, User *> &user_map, std::vector<Channel *> &channel_vector, std::string &password);
+		Dispatcher(Server &server);
 		~Dispatcher(void);
 
-		uint16_t executeCommand(int user_fd, const char *raw_message);
-		uint16_t executeCommand(int user_fd, const std::string &raw_message);
+		void executeCommand(int user_fd, const char *raw_message);
+		void executeCommand(int user_fd, const std::string &raw_message);
 };

@@ -4,20 +4,18 @@
 #include <string>
 #include <vector>
 
-class User;
-
 /*
- * @brief: This class it the representation of the message sent but the user
+ * @brief: This class is the representation of the message sent by the user
  * @detail: This class will parse an IRC message to extract information such as
- *     the command, every parameter and the plain text parameter. I have put a User & to
- *     know easly who sent the message. The raw_message is probably useless but i put it in case
+ *     the command, every parameter and the plain text parameter. The sender
+ *     is not stored here: the commands receive the User who talked through
+ *     the dispatcher, the Message only represents the parsed line.
+ *     The raw_message is probably useless but i put it in case
  *     of we need to do the non-parsed string.
  */
 class Message
 {
 	private:
-		// The user who send the message
-		const User					&_user;
 		// The command wanted by the user
 		std::string 				_command;
 		// The parameter that will succed the command
@@ -29,14 +27,11 @@ class Message
 		void _parseCommaSeparatedParams(const std::string& token);
 
 	public:
-		Message(User &user, const char *raw_str);
-		Message(User &user, char *raw_str);
-		Message(User &user, const std::string &raw_str);
-		Message(Message &cpy);
-		Message	&operator=(Message &cpy);
+		Message(const char *raw_str);
+		Message(const std::string &raw_str);
+		~Message();
 
 		void						parse(void);
-		const User						&getUser(void) const throw();
 		const std::string				&getCommand(void) const throw();
 		const std::vector<std::string>	&getParameter(void) const throw();
 		const std::string				&getTextMessage(void) const throw();

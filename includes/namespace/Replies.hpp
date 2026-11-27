@@ -3,14 +3,18 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <inttypes.h>
 
-#include "irc.hpp"
+#include "includes/Logging.hpp"
+#include "includes/Message.hpp"
+#include "includes/User.hpp"
+#include "includes/irc.hpp"
 
 /*
  *	Constructeurs des reponses numeriques envoyees par le serveur.
  *
  *	Chaque fonction renvoie une ligne IRC complete, "\r\n" compris, prete a etre
- *	mise dans t_reply::line :
+ *	mise dans le buffer d'envoi du destinataire :
  *
  *		:<serveur> <code> <client> <parametres...> [:<texte>]\r\n
  *
@@ -29,11 +33,17 @@
 
 #define SERVER_NAME		"ircserv"
 #define SERVER_VERSION	"ircserv-1.0"
+#define USERLEN			12 // The number of character that a username can have
+#define REALLEN			128 // The number of character possible in a realname
 
 //	Modes annonces au client dans 004
 #define USER_MODES		"o"
 #define CHANNEL_MODES	"iklot"
 
+/*
+ * @namespace rpl
+ * @note <doxygene to write>
+ */
 namespace rpl
 {
 	//	Le nick a mettre dans le champ <client> : "*" tant que NICK n'a pas ete recu
@@ -145,7 +155,10 @@ namespace rpl
 		return (build(code(RPL_ENDOFBANLIST), nick, channel + " :End of channel ban list"));
 	}
 }
-
+/*
+ * @namespace err
+ * @note <doxygene to write>
+ */
 namespace err
 {
 	using rpl::build;
@@ -173,6 +186,12 @@ namespace err
 	inline std::string	noOrigin(const std::string &nick)
 	{
 		return (build(code(ERR_NOORIGIN), nick, ":No origin specified"));
+	}
+
+	//	402 ERR_NOSUCHSERVER : PING vers un serveur inconnu
+	inline std::string	noSuchServer(const std::string &nick, const std::string &server)
+	{
+		return (build(code(ERR_NOSUCHSERVER), nick, server + " :No such server"));
 	}
 
 	//	411 ERR_NORECIPIENT : PRIVMSG / NOTICE sans cible
@@ -259,6 +278,12 @@ namespace err
 		return (build(code(ERR_PASSWDMISMATCH), nick, ":Password incorrect"));
 	}
 
+	//	468 ERR_INVALIDUSERNAME : USER avec un caractere interdit dans le username
+	inline std::string	invalidUsername(const std::string &nick)
+	{
+		return (build(code(ERR_INVALIDUSERNAME), nick, ":Invalid username"));
+	}
+
 	//	471 ERR_CHANNELISFULL : limite +l atteinte
 	inline std::string	channelIsFull(const std::string &nick, const std::string &channel)
 	{
@@ -313,5 +338,146 @@ namespace err
 										const std::string &description)
 	{
 		return (build(code(ERR_INVALIDMODEPARAM), nick, target + " " + std::string(1, mode) + " " + param + " :" + description));
+	}
+	//	PONG : echo du token d un PING (keep-alive), pas un numerique : la
+	//	ligne se construit a la main, elle ne passe pas par build()
+	inline std::string	pong(const std::string &token)
+	{
+		return (":" SERVER_NAME " PONG " + token + "\r\n");
+	}
+}
+/*
+ * @namespace replies
+ * @brief The namespace with everything to build properly formed replies
+ * @detail With this namespace, we are now able to convert a code (like
+ *         001 welcome, 401 nosuchnick, ...) into the real error message to
+ *         sent to the user.
+ * @see rpl, err
+ * @note
+ *       - Every parameter is regoup in the t_return_info struct to centrilized everything
+ *       at the same place.
+ *       - Is used by the dispatcher
+ */
+namespace replies
+{
+	// Import other namespace on the replies namespace
+	using namespace err;
+	using namespace rpl;
+
+	typedef enum s_code_type
+	{
+		CODE_TYPE_UNKNOWN = 0,
+		CODE_TYPE_ERROR,
+		CODE_TYPE_REPLY,
+	}				t_code_type;
+	// struct who contain every information to build the message
+	typedef struct s_return_info
+	{
+		std::string	nick;					//	The nickname of the user how will recieve the message
+		std::string	user;					//	The username of the usr who will recieve the message
+		std::string	host;					//	The hostname is just the server name
+		std::string	date;					//	When the server was started, needed by 003
+		std::string	command;				//	The command who have trigger the reply
+		std::string	target;					//	The faulty nick / channel, needed by 401 / 432 / 433 / ...
+		uint16_t	exit_code;				// The code who is returned by the handler, 0 = nothing to send
+		uint8_t		snapshot_registration;	// Snapshot of the 8 bits
+		int			fd;
+
+		s_return_info(void) :
+			nick("*"),
+			user(),
+			host(SERVER_NAME),
+			date(),
+			command(),
+			target(),
+			exit_code(0),
+			snapshot_registration(0),
+			fd(-1)
+		{ ; }
+		s_return_info(const ::Message &msg) :
+			nick(),
+			user(),
+			host(SERVER_NAME),
+			date(),
+			command(msg.getCommand()),
+			target(),
+			exit_code(0),
+			snapshot_registration(0),
+			fd(-1)
+		{ ; }
+		s_return_info(const ::User &user, const ::Message &msg) :
+			nick(rpl::client(user.getNickname())),
+			user(user.getUsername()),
+			host(SERVER_NAME),
+			date(),
+			command(msg.getCommand()),
+			target(),
+			exit_code(0),
+			snapshot_registration(user.isRegisted()),
+			fd(user.getFd())
+		{ ; }
+		s_return_info(const ::User &user, const ::Message &msg, int code) :
+			nick(rpl::client(user.getNickname())),
+			user(user.getUsername()),
+			host(SERVER_NAME),
+			date(),
+			command(msg.getCommand()),
+			target(),
+			exit_code(code),
+			snapshot_registration(user.isRegisted()),
+			fd(user.getFd())
+		{ ; }
+		s_return_info(const ::User &user, const ::Message &msg, const std::string &date) :
+			nick(rpl::client(user.getNickname())),
+			user(user.getUsername()),
+			host(SERVER_NAME),
+			date(date),
+			command(msg.getCommand()),
+			target(),
+			exit_code(0),
+			snapshot_registration(user.isRegisted()),
+			fd(user.getFd())
+		{ ; }
+		void clear(void)
+		{nick.clear(), user.clear(), host.clear(), date.clear(), command.clear(), target.clear(), exit_code = 0, fd = -1;}
+	}	t_return_info;
+	typedef t_return_info rtn_i_t;
+
+	inline std::string	build(uint16_t code, const rtn_i_t &rtn_i)
+	{
+		switch (code)
+		{
+			//	Registration burst, sent once the three flags are up
+			case RPL_WELCOME:			return (rpl::welcome(rtn_i.nick, rtn_i.user, rtn_i.host));
+			case RPL_YOURHOST:			return (rpl::yourHost(rtn_i.nick));
+			case RPL_CREATED:			return (rpl::created(rtn_i.nick, rtn_i.date));
+			case RPL_MYINFO:			return (rpl::myInfo(rtn_i.nick));
+			case RPL_ISUPPORT:			return (rpl::iSupport(rtn_i.nick));
+			case ERR_NOMOTD:			return (err::noMotd(rtn_i.nick));
+
+			//	Connection / registration errors
+			case ERR_NEEDMOREPARAMS:	return (err::needMoreParams(rtn_i.nick, rtn_i.command));
+			case ERR_ALREADYREGISTRED:	return (err::alreadyRegistered(rtn_i.nick));
+			case ERR_PASSWDMISMATCH:	return (err::passwdMismatch(rtn_i.nick));
+			case ERR_NOTREGISTERED:		return (err::notRegistered(rtn_i.nick));
+			case ERR_NONICKNAMEGIVEN:	return (err::noNicknameGiven(rtn_i.nick));
+			case ERR_ERRONEUSNICKNAME:	return (err::erroneusNickname(rtn_i.nick, rtn_i.target));
+			case ERR_NICKNAMEINUSE:		return (err::nicknameInUse(rtn_i.nick, rtn_i.target));
+			case ERR_INVALIDUSERNAME:	return (err::invalidUsername(rtn_i.nick));
+
+			//	PRIVMSG / command errors
+			case ERR_NORECIPIENT:		return (err::noRecipient(rtn_i.nick, rtn_i.command));
+			case ERR_NOTEXTTOSEND:		return (err::noTextToSend(rtn_i.nick));
+			case ERR_NOSUCHNICK:		return (err::noSuchNick(rtn_i.nick, rtn_i.target));
+			case ERR_CANNOTSENDTOCHAN:	return (err::cannotSendToChan(rtn_i.nick, rtn_i.target));
+			case ERR_BADCHANMASK:		return (err::badChanMask(rtn_i.nick, rtn_i.target));
+			case ERR_UNKNOWNCOMMAND:	return (err::unknownCommand(rtn_i.nick, rtn_i.command));
+
+			//	PING errors
+			case ERR_NOORIGIN:		return (err::noOrigin(rtn_i.nick));
+			case ERR_NOSUCHSERVER:	return (err::noSuchServer(rtn_i.nick, rtn_i.target));
+
+			default:					return ("");
+		}
 	}
 }

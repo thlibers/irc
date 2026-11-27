@@ -1,6 +1,10 @@
 
+
+// User includes
 #include "includes/Message.hpp"
 #include "includes/namespace/helper.hpp"
+
+// Library includes
 #include <cstddef>
 #include <cstring>
 #include <vector>
@@ -8,25 +12,33 @@
 #include <exception>
 #include <iostream>
 
-Message::Message(User &user, const char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
-{
-	this->parse();
-};
-Message::Message(User &user, char *raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
-{
-	this->parse();
-};
-Message::Message(User &user, const std::string &raw_str) : _user(user),  _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
-{
-	this->parse();
-};
-Message::Message(Message &cpy) : _user(cpy._user), _command(cpy._command), _parameter(cpy._parameter), _text_message(cpy._text_message), _raw_message(cpy._raw_message) { ; };
 /*
- * @brief: Helper function to parse comma-separated parameters
- * @param: token - The token potentially containing comma-separated values
- * @note:
- *     - Splits "param1,param2,param3" into separate parameters
- *     - Example: "JOIN #ch1,#ch2,#ch3" creates three parameters
+ * @name  Message
+ * @brief constructor for C-style string
+ * @note  Automaticly parse the line when the list assignement is done
+ */
+Message::Message(const char *raw_str) : _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
+{
+	this->parse();
+};
+/*
+ * @name  Message
+ * @brief constructor for C++ string
+ * @note  Automaticly parse the line when the list assignement is done
+ */
+Message::Message(const std::string &raw_str) : _command(""), _parameter(), _text_message(""), _raw_message(raw_str)
+{
+	this->parse();
+};
+/*
+ * @name  Message
+ * @brief Destructor
+ */
+Message::~Message(void) {;}
+/*
+ * @name  _parseCommaSeparatedParams
+ * @param token the
+ * @brief
  */
 void Message::_parseCommaSeparatedParams(const std::string& token)
 {
@@ -40,14 +52,9 @@ void Message::_parseCommaSeparatedParams(const std::string& token)
 	}
 }
 /*
- * @brief: This function is used to parse an IRC line to extract information like
- *         - The command
- *         - The parameter
- *         - The "real" content of the message
- * @note:
- *     - Parameters can be comma-separated (e.g., "#ch1,#ch2")
- *     - Trailing text (after ":") is kept as-is
- *     - Example: "PRIVMSG #channel1,#channel2 :Hello world"
+ * @name  parse
+ * @brief Function that parse the line to get every usefull information like the command
+ *        sent, every parameter or the text message
  */
 void Message::parse(void)
 {
@@ -80,23 +87,23 @@ void Message::parse(void)
 	}
 	this->_text_message = helper::strtrim(this->_text_message);
 }
-
-const User						&Message::getUser(void) const throw() { return (this->_user); }
+/*
+ * @name  getCommand
+ * @brief getter who return a string with the command
+ */
 const std::string				&Message::getCommand(void) const throw() { return (this->_command); }
+/*
+ * @name  getCommand
+ * @brief getter who return a vector with every parameter on it
+ */
 const std::vector<std::string>	&Message::getParameter(void) const throw() { return (this->_parameter); }
+/*
+ * @name  getCommand
+ * @brief getter who return a sttring with the text message on it
+ */
 const std::string				&Message::getTextMessage(void) const throw() { return (this->_text_message); }
+/*
+ * @name  getCommand
+ * @brief getter who return a string with the non treated string
+ */
 const std::string				&Message::getRawMessage(void) const throw() { return (this->_raw_message); }
-
-void						Message::debug(void) const throw()
-{
-	std::vector<std::string>::const_iterator it = this->_parameter.begin();
-	std::vector<std::string>::const_iterator ite = this->_parameter.end();
-
-	std::cout << "Command: \"" << this->_command << "\"" << std::endl;
-	for (std::size_t i = 1; it != ite; i++)
-	{
-		std::cout << "Parameter n°" << i << ": \"" << *it << "\"" << std::endl;
-		++it;
-	}
-	std::cout << "Text message: \"" << this->_text_message << "\"" << std::endl;
-}

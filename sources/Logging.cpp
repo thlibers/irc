@@ -1,5 +1,7 @@
 
 #include "includes/Logging.hpp"
+
+/*  */
 #include <iostream>
 #include <new>
 
@@ -52,7 +54,6 @@ Logging::Stream::~Stream(void)
 		std::cerr << this->_buffer->str() << std::endl;
 	delete this->_buffer;
 }
-
 /*
  * @name: operator<<
  * @brief: Append data to the accumulated line

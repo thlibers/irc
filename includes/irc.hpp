@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <string>
+#include <inttypes.h>
+
 /*
  * ==================
  * = ERROR MESSAGES =
@@ -8,15 +11,15 @@
  */
 
 // Error throw if the argc < 3
-#define ENOE_ARGS "Not enought arguments!"
+#define ENOE_ARGS "Not enought arguments"
 // Error throw if the argc > 3
-#define ETOM_ARGS "Too many arguments!"
+#define ETOM_ARGS "Too many arguments"
 // Error throw if a password is too long (1024 char max)
-#define EPWD_TOO_LONG "The password is too long!"
+#define EPWD_TOO_LONG "The password is too long"
 // Error throw if the port is not a uint16_t (also known as short)
 #define EINVALID_PORT "Invalid port number 1-65535"
 // Error throw if a "new" operator failed
-#define EMEMORY "Failed to allocated memory!"
+#define EMEMORY "Failed to allocated memory"
 
 #define EUSER_CREATION "ERROR: The server failed to allocated memory for you\r\n"
 
@@ -170,6 +173,7 @@
 #define ERR_PASSWDMISMATCH           464
 #define ERR_YOUREBANNEDCREEP         465
 #define ERR_KEYSET                   467
+#define ERR_INVALIDUSERNAME          468
 #define ERR_CHANNELISFULL            471
 #define ERR_UNKNOWNMODE              472
 #define ERR_INVITEONLYCHAN           473

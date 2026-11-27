@@ -27,6 +27,9 @@ class User
 		std::string				_real_name;
 		// The fd of the client socket linked to this user, -1 until set
 		int						_fd;
+		// True while the client is connected, set to false by the server
+		// before dropping his connection (only used by QUIT)
+		bool					_alive;
 		// A vector with every channel that the user is on
 		std::vector<Channel *>	_channel_joined;
 		// 8bits that define if a user is registerd or not
@@ -55,13 +58,15 @@ class User
 		void	setUsername(const std::string &username) throw();
 		void	setRealName(const std::string &realname) throw();
 		void	setFd(int fd) throw();
+		void	setAlive(bool alive) throw();
 
 		// --- GETTER ---
 
-		const std::string	&getNickname(void) throw();
-		const std::string	&getUsername(void) throw();
-		const std::string	&getRealName(void) throw();
+		const std::string	&getNickname(void) const throw();
+		const std::string	&getUsername(void) const throw();
+		const std::string	&getRealName(void) const throw();
 		int					getFd(void) const throw();
+		bool				isAlive(void) const throw();
 
 		// --- USER CHANNEL ---
 
@@ -77,6 +82,7 @@ class User
 		uint8_t	isRegisted(void) const throw();
 		void	setFlag(uint8_t flag) throw();
 
+		// --- Wrapper ---
 		static User	*createNewUser(std::string &nickname,
 								   std::string &username,
 								   std::string &realname);

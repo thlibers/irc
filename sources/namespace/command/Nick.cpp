@@ -10,9 +10,10 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <bitset>
 #include <vector>
 
-command::Nick::Nick(::User &user, const ::Message &message, std::map<int, ::User *> &user_map) :
+command::Nick::Nick(::User &user, const ::Message &message, const std::map<int, ::User *> &user_map) :
 		ACommand(user, message),
 		_user_map(user_map)
 { ; }
@@ -59,12 +60,12 @@ static bool	isValid(const std::string &nick)
  *          have it
  */
 static bool	isAvailable(const std::string &nick,
-							std::map<int, User *> &user_map,
+							const std::map<int, User *> &user_map,
 							const User &sender)
 {
 	const std::string	upper_nick = helper::strupper(nick);
 
-	for (std::map<int, User *>::iterator it = user_map.begin(); it != user_map.end(); ++it)
+	for (std::map<int, User *>::const_iterator it = user_map.begin(); it != user_map.end(); ++it)
 	{
 		if (it->second == NULL || it->second == &sender)
 			continue ;
@@ -74,7 +75,7 @@ static bool	isAvailable(const std::string &nick,
 	return (true);
 }
 
-uint16_t	command::Nick::run(void)
+replies::t_return_info	command::Nick::run(void)
 {
 	std::vector<std::string>	params = this->_message.getParameter();
 
@@ -84,7 +85,7 @@ uint16_t	command::Nick::run(void)
 		#ifdef DEBUG
 		Logging::info() << "The client " << this->_user.getFd() << " has enter an empty nickname";
 		#endif
-		return (ERR_NONICKNAMEGIVEN);
+		return (this->_makeReturnInfo(ERR_NONICKNAMEGIVEN));
 	}
 	// Check if the nickname est valide
 	if (!isValid(params[0]))
@@ -92,7 +93,7 @@ uint16_t	command::Nick::run(void)
 		#ifdef DEBUG
 		Logging::info() << "The client " << this->_user.getFd() << " has enter an invalid nickname " << params[0];
 		#endif
-		return (ERR_ERRONEUSNICKNAME);
+		return (this->_makeReturnInfo(ERR_ERRONEUSNICKNAME, params[0]));
 	}
 	// Check if the nickname is available
 	if (!isAvailable(params[0], this->_user_map, this->_user))
@@ -100,12 +101,19 @@ uint16_t	command::Nick::run(void)
 		#ifdef DEBUG
 		Logging::info() << "The client " << this->_user.getFd() << " has try to set an already used password " << params[0];
 		#endif
-		return (ERR_NICKNAMEINUSE);
+		return (this->_makeReturnInfo(ERR_NICKNAMEINUSE, params[0]));
 	}
+	// Set the new nickname
 	this->_user.setNickname(params[0]);
 	#ifdef DEBUG
 	Logging::info() << "The client " << this->_user.getFd() << " has set is nickname to " << params[0];
 	#endif
+
+	// Set the NICK flag
 	this->_user.setFlag(::User::NICK_SUPPLIED);
-	return (0);
+	#ifdef DEBUG
+	Logging::info() << "Client " << this->_user.getFd() << " bits states " << std::bitset<3>(this->_user.isRegisted()).to_string();
+	#endif
+
+	return (this->_makeReturnInfo(0));
 }

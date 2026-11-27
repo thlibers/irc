@@ -93,3 +93,4 @@ Once connected and authenticated with `PASS`, `NICK` and `USER`, the following c
 - [RFC 1459](https://datatracker.ietf.org/doc/html/rfc1459) · [RFC 2812](https://datatracker.ietf.org/doc/html/rfc2812)
 - [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
 - [man poll](https://man7.org/linux/man-pages/man2/poll.2.html)
+- [Living internet wiki](https://www.livinginternet.com)

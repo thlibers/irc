@@ -1,7 +1,7 @@
 CompileFlags:
   Add:
-    - -I/home/gun8hoot/irc/
+    - -I/home/gun8hoot/Documents/irc/
     - -Wextra
     - -Wall
     - -std=c++98
-    - -DDEBUG
+    - -DDEBUG=1

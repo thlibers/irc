@@ -5,10 +5,6 @@
 #include <string>
 #include <inttypes.h>
 
-#ifndef DEBUG
-# define DEBUG false
-#endif
-
 #define FR_RED "\e[31m"
 #define RESET "\e[0m"
 

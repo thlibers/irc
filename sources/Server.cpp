@@ -1,17 +1,19 @@
 #include "includes/Server.hpp"
 #include "includes/Dispatcher.hpp"
 #include "includes/Logging.hpp"
+#include "includes/namespace/Replies.hpp"
 #include "includes/User.hpp"
 #include "includes/irc.hpp"
+#include <cstddef>
 #include <new>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
 #include <csignal>
+#include <ctime>
 
 static volatile sig_atomic_t g_signal = 0;
-
 /*
  * @brief: handler de SIGINT (Ctrl+C) et SIGQUIT (Ctrl+\). Leve g_signal pour
  *			que la boucle de Run() s arrete et que le serveur quitte proprement.
@@ -21,21 +23,45 @@ static void handleSignal(int sig)
 	(void)sig;
 	g_signal = 1;
 }
+/*
+ * @brief: construit la date et l heure actuelles sous la forme
+ *         "Fri Nov 27 14:32:01 2026"
+ * @note: std::ctime() laisse un '\n' en fin de string, strftime() n en met pas
+ */
+static std::string	currentTimestamp(void)
+{
+	char			buf[64];
+	std::time_t		now = std::time(NULL);
 
-Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false)
+	if (std::strftime(buf, sizeof(buf), "%a %b %d %H:%M:%S %Y", std::localtime(&now)) == 0)
+		return ("");
+	return (std::string(buf));
+}
+/*
+ * @name  Server
+ * @brief Constructor
+ * @param port the port to listen
+ * @param password the password to provided to enter on the connect on the server
+ * @note  An memory allocation is done to create the dispatcher object
+ */
+Server::Server(const uint16_t port, const std::string &password): _port(port), _psswd(password), _listenfd(-1), _running(false), _create_at(currentTimestamp())
 {
 	// Create the dispatcher object, the "std::nothrow" avoid new to throw a std::bad_alloc exception.
 	// Ive do this to get a nice message output instead of a regular "Allocation failed: std::bad_alloc"
-	this->_dispatcher = new(std::nothrow) Dispatcher(this->_clients, this->_channel, this->_psswd);
+	this->_dispatcher = new(std::nothrow) Dispatcher(*this);
 	if (!this->_dispatcher)
 		throw (std::runtime_error("Failed to allocated memory for the command dispatcher"));
 }
-
 // le but ici est de liberer chaque client -> fermer son fd, et delete sa "fiche" client
 // pour se balader dans la map client on a besoin d un iterateur, end pointe sur l element apres le dernier (comme '\0' sur une string)
 // first = le fd du client
 // second = l objet client (nom, mdp, etc)
 // si jamais le socket serveur ecoute, faut le close aussi (_listenfd)
+
+/*
+ * @name  ~Server
+ * @brief Destructor
+ */
 Server::~Server()
 {
 	if (this->_dispatcher)
@@ -51,12 +77,50 @@ Server::~Server()
 	if(_listenfd != -1)
 		close(_listenfd);
 }
-
+/*
+ * @name   getClients
+ * @brief  Get the map with every client
+ * @return The std::map with every "User *" associated with the fd on it
+ */
+std::map<int, User *>	&Server::getClients(void)
+{
+	return (this->_clients);
+}
+/*
+ * @name   getChannels
+ * @brief  Get the vector with every channel on it
+ * @return The std::vector with every "Channel *"
+ */
+std::vector<Channel *>	&Server::getChannels(void)
+{
+	return (this->_channel);
+}
+/*
+ * @name   getPassword
+ * @brief  Get the string who contain the non hashed passwrrod
+ * @return The std::string with the password written on it
+ */
+std::string				&Server::getPassword(void)
+{
+	return (this->_psswd);
+}
+/*
+ * @name   getCreateAt
+ * @brief  Get the date where the server have been created
+ * @retrun the string with the time and date of when the server hhave been created
+ */
+const std::string		&Server::getCreateAt(void) const
+{
+	return (this->_create_at);
+}
+/*
+ * @name   Stop
+ * @brief  Stop the Server::run() function
+ */
 void Server::Stop()
 {
 	_running = false;
 }
-
 /*
 * @brief:	boucle principale du serveur. Attend des evenements sur l ensemble
 *			des fd surveilles (socket d ecoute + clients) et les traite, jusqu a
@@ -79,7 +143,7 @@ void Server::Run()
 
 	SetupSocket();
 	_running = true;
-	Logging::info() << "The server has been launched";
+	Logging::info() << "The server has been launched on 0.0.0.0:" << _port << " at " << _create_at;
 	while (_running && !g_signal)
 	{
 		// poll() ne lit ni n ecrit rien : ca endort le processus jusqu a ce qu au
@@ -114,13 +178,28 @@ void Server::Run()
 				// ca evite d appeler Send() sur un client mort et de deconnecter deux fois
 				bool alive = true;
 
+
+				// Le sens de Send() et Receive() ont ete swap car il provoquer un bug
+				// lorsque l'on fessait ctrl+d dans nc qui ne vidait pas le buffer d'envoie.
+				// Ducoup lorsque le client se fessait deco la prochaine personne qui prennais le fd
+				// de l'ancien client avait tous l'output de l'ancienne personne. Si on aurait juste
+				// a handle des clients comme irssi, hexcchat ou autre ça aurait ete ok mais
+				// le sujet nous dit d'utiliser nc comme des golbar (si j'ai mal expliquer, regardais
+				// dans le dossier qui s'appelle out, j'ai mis l'explication de glm quand il a trouver
+				// le bug)
+				if (_pollfds[i].revents & POLLOUT)
+					alive = Send(i);
 				// POLLIN = donnees a lire. POLLHUP / POLLERR = connexion coupee ou en erreur :
 				// on appelle quand meme Receive(), recv() renverra 0 ou -1 et donc false
-				if (_pollfds[i].revents & (POLLIN | POLLHUP | POLLERR))
+				if (alive && (_pollfds[i].revents & (POLLIN | POLLHUP | POLLERR)))
 					alive = Receive(_pollfds[i].fd);
-				// POLLOUT = le client peut recevoir, on vide son buffer d envoi
-				if (alive && (_pollfds[i].revents & POLLOUT))
-					alive = Send(i);
+				// A command may have marked the user as dead (QUIT): the
+				// _alive flag is the signal to drop the connection here,
+				// once the command processing is over
+				std::map<int, User *>::iterator	it_usr = _clients.find(_pollfds[i].fd);
+
+				if (alive && it_usr != _clients.end() && !it_usr->second->isAlive())
+					alive = false;
 				if (!alive)
 				{
 					Disconnect(i);
@@ -245,8 +324,8 @@ void Server::Accept()
  */
 bool Server::Receive(int fd)
 {
-	char buf[512];
-	ssize_t n = recv(fd, buf, sizeof(buf), 0);
+	char		buf[512];
+	ssize_t		n = recv(fd, buf, sizeof(buf), 0);
 	if(n <= 0)
 		return false;
 	_recvbuf[fd].append(buf, n);
@@ -255,20 +334,18 @@ bool Server::Receive(int fd)
 	{
 		// la ligne = tout ce qui precede le \n
 		std::string line = _recvbuf[fd].substr(0, pos);
+
+		// Parse and execute the command
+		_dispatcher->executeCommand(fd, line);
+
 		// on retire du buffer la ligne et son \n (d'ou le + 1)
 		_recvbuf[fd].erase(0, pos + 1);
-		// IRC termine les lignes par \r\n : on enleve le \r s il est la.
-		// le test !empty() evite de lire line[-1] sur une ligne vide
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
-		QueueMessage(fd, line + "\r\n");
 
 		// le buffer a change : on recherche la ligne suivante
 		pos = _recvbuf[fd].find("\n");
 	}
 	return true;
 }
-
 /*
  * @brief: ferme la connexion d un client et oublie tout ce qui le concerne.
  * @param: i, l index du client dans _pollfds (pas son fd)
@@ -284,6 +361,10 @@ void Server::Disconnect(size_t i)
 	std::map<int, User*>::iterator it = _clients.find(fd);
 	if (it != _clients.end())
 	{
+		// Mark the user as dead before anything else: everything who hold
+		// a pointer on him can check isAlive() between the mark and the
+		// cleanup instead of using a stale User
+		it->second->setAlive(false);
 		delete it->second;
 		_clients.erase(it);
 	}
@@ -301,14 +382,6 @@ void Server::Disconnect(size_t i)
  */
 void Server::QueueMessage(int fd, const std::string &msg)
 {
-	uint16_t return_code;
-
-	(void)return_code;
-	if (msg.empty())
-		return;
-	/* Dispatcher problaly here */
-	return_code = _dispatcher->executeCommand(fd, msg);
-
 	/* Placeholder that return the message sent by the user */
 	_sendbuf[fd] += msg;
 	for(size_t i = 0; i < _pollfds.size(); i++)
@@ -319,7 +392,6 @@ void Server::QueueMessage(int fd, const std::string &msg)
 		}
 	}
 }
-
 /*
  * @brief: envoie au client ce que son buffer d envoi contient. Si tout n est
  *         pas parti, le reste attend le prochain POLLOUT.
@@ -331,10 +403,15 @@ void Server::QueueMessage(int fd, const std::string &msg)
  */
 bool Server::Send(size_t i)
 {
+	ssize_t n = 0;
 	int fd = _pollfds[i].fd;
-	ssize_t n = send(fd, _sendbuf[fd].c_str(), _sendbuf[fd].size(), MSG_NOSIGNAL);
-	if(n <= 0)
-		return false;
+
+	if (_sendbuf[fd].size() != 0)
+	{
+		n = send(fd, _sendbuf[fd].c_str(), _sendbuf[fd].size(), MSG_NOSIGNAL);
+		if(n <= 0)
+			return false;
+	}
 	_sendbuf[fd].erase(0, n);
 	if(_sendbuf[fd].empty())
 		_pollfds[i].events &= ~POLLOUT;

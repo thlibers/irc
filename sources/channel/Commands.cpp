@@ -1,6 +1,6 @@
 #include "includes/channel/Commands.hpp"
 #include "includes/User.hpp"
-#include "includes/Replies.hpp"
+#include "includes/namespace/Replies.hpp"
 #include <cctype>
 #include <sstream>
 

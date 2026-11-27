@@ -24,37 +24,36 @@
  * =============
  */
 
+/*
+ * @name   Cli
+ * @brief  default constructor
+ * @detail Set every field to 0/NULL
+ */
 Cli::Cli(void) : _server(NULL), _argc(0), _argv(NULL) { ; };
-
+/*
+ * @name   Cli
+ * @brief  constructor to put set reference to the given parameter
+ * @param  argc, the number of arguments that the user have entered
+ * @param  argc, the array with every arguments types
+ * @detail Set every field to 0/NULL except for _argc and _argv who are set to there
+ *         corresponding value
+ */
 Cli::Cli(int &argc, char **&argv) : _server(NULL), _argc(argc), _argv(argv) { ; };
-
-Cli::Cli(Cli &cpy) : _server(NULL), _argc(cpy._argc), _argv(cpy._argv) { ; };
-
-Cli	&Cli::operator=(Cli &cpy)
-{
-	if (&cpy != this)
-	{
-		this->_server = cpy._server;
-		this->_argc = cpy._argc;
-		this->_argv = cpy._argv;
-	}
-	return (*this);
-}
-
+/*
+ * @name   Cli
+ * @brief  The destructor of the object
+ * @detail Since the Server object is created during the execution of the CLI
+ *         we destruct him if it exist
+ */
 Cli::~Cli(void)
 {
 	if (this->_server != NULL)
 		delete _server;
 }
-
 /*
- * @brief: Parse arguments from argv and run the server
- * @throw:
- *     - Cli::Cli_error a custom exception who print a personized what() message
- *       and the usage of the software
- * @todo:
- *     - Uncomment the Server creation and launch at the bottom of the function
- *       when the is ready to be launched (check destructor too).
+ * @name   run
+ * @brief  Parse arguments from argv and run the server
+ * @throw  Cli_error with the corresponding error write on it
  */
 void	Cli::run(void)
 {
@@ -79,11 +78,12 @@ void	Cli::run(void)
 	/* Create and run the server without */
 	this->_server = new(std::nothrow) Server(port, password);
 	if (!this->_server)
-		throw (std::runtime_error("[!] Failed to allocated memory for the server!"));
+		throw (std::runtime_error("Failed to allocated memory for the server!"));
 	this->_server->Run();
 }
 /*
- * @brief: The function that display the help message
+ * @name  help
+ * @brief Display on the standard error output an help message
  */
 void	Cli::help(void) throw()
 {
@@ -91,15 +91,33 @@ void	Cli::help(void) throw()
 			  << "    {PORT} = The number of the port to use" << std::endl
 			  << "    {PASSWORD} = The password to connect to the server" << std::endl;
 }
+
 /*
  * =======================
  * = CLI_ERROR EXCEPTION =
  * =======================
  */
-Cli::Cli_error::Cli_error(void) : std::runtime_error(""), _message("undefined cli_error") { ; }
-Cli::Cli_error::Cli_error(const std::string message) : std::runtime_error(""), _message(message) { ; }
-Cli::Cli_error::~Cli_error(void) throw() { ; }
 
+/*
+ * @name Cli_error
+ * @brief default constructor, set output message to a string that notify the user
+ *        that the error is undefined
+ */
+Cli::Cli_error::Cli_error(void) : std::runtime_error(""), _message("undefined cli_error") { ; }
+/*
+ * @name  Cli_error
+ * @brief Constructor who store the message write on the object
+ */
+Cli::Cli_error::Cli_error(const std::string message) : std::runtime_error(""), _message(message) { ; }
+/*
+ * @name  Cli_error
+ * @brief Destructor
+ */
+Cli::Cli_error::~Cli_error(void) throw() { ; }
+/*
+ * @name  what
+ * @brief Function overloading of the what function
+ */
 const char *Cli::Cli_error::what(void) const throw()
 {
 	// Return the c version of the message give on the constructor of the exception

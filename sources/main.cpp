@@ -1,7 +1,8 @@
 
 #include "includes/Cli.hpp"
-#include "includes/namespace/helper.hpp"
+#include "includes/Logging.hpp"
 
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 
@@ -15,14 +16,14 @@ int main(int argc, char **argv)
 	}
 	catch (Cli::Cli_error &ex)
 	{
-		std::cerr << FR_RED << "[!] Error : " << ex.what() << RESET << std::endl;
+		Logging::error() << ex.what();
 		cli.help();
-		return (1);
+		return (EXIT_FAILURE);
 	}
 	catch (std::exception &ex)
 	{
-		std::cerr << FR_RED << "[!] Error : " << ex.what() << RESET << std::endl;
-		return (1);
+		Logging::error() << ex.what();
+		return (EXIT_FAILURE);
 	}
-	return (0);
+	return (EXIT_SUCCESS);
 }

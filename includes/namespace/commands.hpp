@@ -9,6 +9,8 @@
 #include <map>
 #include <vector>
 
+#include "includes/namespace/Replies.hpp"
+
 class User;
 class Message;
 
@@ -28,11 +30,21 @@ namespace command
 		protected:
 			::User			&_user;
 			const ::Message	&_message;
+
+			/*
+			 * @brief: Build a return info filled with the fresh identity of the
+			 *         sender at the exact moment of the return: the errors happen
+			 *         before any change, the success is reported after them
+			 * @param: code, the IRC code to answer, 0 = nothing to send
+			 * @param: target, the faulty nick / channel when there is one
+			 * @return: a t_return_info ready to be given to replies::build
+			 */
+			replies::t_return_info	_makeReturnInfo(uint16_t code, const std::string &target = "") const;
 		public:
 			ACommand(::User &user, const ::Message &message);
 
 			virtual ~ACommand(void) = 0;
-			virtual uint16_t run(void) = 0;
+			virtual replies::t_return_info run(void) = 0;
 
 			class FailedExec : public std::exception
 		{
@@ -77,13 +89,13 @@ namespace command
 	class Nick : public ACommand
 	{
 		private:
-			std::map<int, ::User *>	&_user_map;
+			const std::map<int, ::User *>	&_user_map;
 		public:
-			Nick(::User &user, const ::Message &message, std::map<int, ::User *> &user_map);
+			Nick(::User &user, const ::Message &message, const std::map<int, ::User *> &user_map);
 			Nick(Nick &cpy);
 			~Nick(void);
 
-			uint16_t	run(void);
+			replies::t_return_info	run(void);
 	};
 	/*
 	 * @brief:  This class is the representation of the PASS command
@@ -97,7 +109,7 @@ namespace command
 			Pass(::User &user, const ::Message &message, std::string &server_password);
 			~Pass(void);
 
-			uint16_t	run(void);
+			replies::t_return_info	run(void);
 	};
 	/*
 	 * @brief:  This class is the representation of the USER command
@@ -109,23 +121,28 @@ namespace command
 			User(::User &user, const ::Message &message);
 			~User(void);
 
-			uint16_t	run(void);
+			replies::t_return_info	run(void);
 	};
 	/*
-	 * @brief:  This class is the representation of the USER command
+	 * @brief:  This class is the representation of the PRIVMSG command
 	 * @detail: It inherit from ACommand pure abstract class
 	 */
 	class Privmsg : public ACommand
 	{
 		private:
+			// The map with every connected user, used to check that the
+			// target of the message exists (ERR_NOSUCHNICK)
+			std::map<int, ::User *>		&_user_map;
+			// The first target given by the sender (channel or nick)
 			std::string					_channel;
+			// Every remaining target, only the first one is handled for now
 			std::vector<std::string>	_userlist;
 		public:
-			Privmsg(::User &user, const ::Message &message);
+			Privmsg(::User &user, const ::Message &message, std::map<int, ::User *> &user_map);
 			Privmsg(Privmsg &cpy);
 			~Privmsg(void);
 
-			uint16_t	run(void);
+			replies::t_return_info	run(void);
 
 		// class FailedExec : public std::runtime_error
 		// {
@@ -138,4 +155,40 @@ namespace command
 		// 		virtual const char	*what(void) const throw();
 		// };
 	};
+
+	class Ping : public ACommand
+	{
+		public:
+			Ping(::User &user, const ::Message &message);
+			~Ping(void);
+
+			replies::rtn_i_t	run(void);
+	};
+
+	class Quit : public ACommand
+	{
+		public:
+			Quit(::User &user, const ::Message &message);
+			~Quit(void);
+
+			replies::rtn_i_t	run(void);
+	};
+	class Join : public ACommand
+	{
+		public:
+			Join(::User &user, const ::Message &message);
+			~Join(void);
+
+			replies::rtn_i_t	run(void);
+	};
+
+	//TEMPLATE CTRL+C ; CTRL+V
+// 	class UNSET : public ACommand
+// 	{
+// 		public:
+// 			UNSET(::User &user, const ::Message &message);
+// 			~UNSET(void);
+//
+// 			replies::rtn_i_t	run(void);
+// 	};
 }

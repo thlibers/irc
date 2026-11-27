@@ -22,6 +22,7 @@ User::User(void) :
 	_username(""),
 	_real_name(""),
 	_fd(-1),
+	_alive(true),
 	_channel_joined(),
 	_registered_flags(User::UNREGISTER)
 { ; }
@@ -40,6 +41,7 @@ User::User(const std::string &nickname, const std::string &username, const std::
 	_username(username),
 	_real_name(real_name),
 	_fd(-1),
+	_alive(true),
 	_channel_joined(),
 	_registered_flags(User::UNREGISTER)
 { ; }
@@ -79,6 +81,14 @@ void	User::setRealName(const std::string &realname) throw()
  */
 void	User::setFd(int fd) throw()
 { this->_fd = fd; }
+/*
+	* @name: setAlive
+	* @brief: Change the alive status of the user, false mean the server has
+	*         dropped (or is dropping) his connection
+	* @param: The new alive status
+	*/
+void	User::setAlive(bool alive) throw()
+{ this->_alive = alive; }
 
 /*
  * ===============
@@ -91,21 +101,21 @@ void	User::setFd(int fd) throw()
  * @brief: Return the nickname of the user
  * @return: The nickname of the user
  */
-const std::string	&User::getNickname(void) throw()
+const std::string	&User::getNickname(void) const throw()
 { return (this->_nickname); }
 /*
  * @name: getUsername
  * @brief: Return the username of the user
  * @return: The username of the user
  */
-const std::string	&User::getUsername(void) throw()
+const std::string	&User::getUsername(void) const throw()
 { return (this->_username); }
 /*
  * @name: getRealName
  * @brief: Return the real name of the user
  * @return: The real name of the user
  */
-const std::string	&User::getRealName(void) throw()
+const std::string	&User::getRealName(void) const throw()
 { return (this->_real_name); }
 /*
  * @name: getFd
@@ -114,6 +124,14 @@ const std::string	&User::getRealName(void) throw()
  */
 int	User::getFd(void) const throw()
 { return (this->_fd); }
+/*
+	* @name: isAlive
+	* @brief: Tell if the user is still connected
+	* @return: true while his socket is up, false once the server has
+	*          dropped the connection
+	*/
+bool	User::isAlive(void) const throw()
+{ return (this->_alive); }
 
 /*
  * ==========================
